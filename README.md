@@ -8,7 +8,7 @@
 
 2.[华南理工大学Beamer模板](https://github.com/mengchaoheng/SCUT_beamer)：将用其他模板写好的latex源码整理出来，一键生成幻灯片。
 
-3.[华南理工大学研究生学位（毕业）论文开题报告LaTeX模板](https://github.com/mengchaoheng/SCUT_Report_Latex)
+3.[华南理工大学研究生学位（毕业）论文开题报告、中期考核LaTeX模板](https://github.com/mengchaoheng/SCUT_Report_Latex)
 
 4.[华南理工大学研究生学位（毕业）论文文献综述LaTeX模板](https://github.com/mengchaoheng/SCUT_Review_Latex)
 
@@ -40,7 +40,7 @@ latex和office在写论文、写slides时只是不同的工具，就像是两把
 
 3.使用编译脚本`all.bat`，记得关掉生成的pdf文档再双击`all.bat`。双击`clean.bat`删除临时文件。（此方法仅支持win，且多年未维护，但维护起来应该很简单，记事本打开`all.bat`编辑一下命令即可，具体命令可百度）
 
-4.使用overleaf，只需要在overleaf网页设置为XeLaTeX的编译方式即可。推荐无编程基础、不喜欢GitHub且能接受在线编辑的同学使用（虽然作者较少更新此版本，但除非重大更改，现版本是一定可以用的）。又可以分为三种操作方法，选择你觉得最顺手的：
+4.使用overleaf，只需要在overleaf网页设置为XeLaTeX的编译方式即可。推荐无编程基础、不喜欢GitHub且能接受在线编辑的同学使用（虽然作者较少更新此版本，但除非重大更改，现版本是一定可以用的）。注意，现在overleaf免费版很可能无法编译大论文这么大的文件。overleaf又可以分为三种操作方法，选择你觉得最顺手的：
 
 1)直接在overleaf网页导入，模板地址在[SCUT_overleaf](https://www.overleaf.com/latex/templates/scut-thesis/bgybznvkjdfx)，更多使用说明参考[overleaf文档](https://www.overleaf.com/learn)。（显然对无编程基础的同学最友好）
 
