@@ -110,7 +110,7 @@ latex和office在写论文、写slides时只是不同的工具，就像是两把
 ## 贡献者
 
 按加入时间顺序：
-  * [mengchaoheng](https://github.com/mengchaoheng)
+  * [woshisangea](https://github.com/woshisangea)
   * [Komari-Koshigaya](https://github.com/Komari-Koshigaya)
   * [zhuohoudeputao](https://github.com/zhuohoudeputao)
   * [PlexusChen](https://github.com/PlexusChen)
