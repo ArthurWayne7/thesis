@@ -4,13 +4,13 @@
 
 本模板还衍生出了很多模板：
 
-1.[华南理工大学硕/博士课程论文LaTeX模板](https://github.com/woshisangea/SCUT_course)
+1.[华南理工大学硕/博士课程论文LaTeX模板](https://github.com/mengchaoheng/SCUT_course)
 
-2.[华南理工大学Beamer模板](https://github.com/woshisangea/SCUT_beamer)：将用其他模板写好的latex源码整理出来，一键生成幻灯片。
+2.[华南理工大学Beamer模板](https://github.com/mengchaoheng/SCUT_beamer)：将用其他模板写好的latex源码整理出来，一键生成幻灯片。
 
-3.[华南理工大学研究生学位（毕业）论文开题报告、中期考核LaTeX模板](https://github.com/woshisangea/SCUT_Report_Latex)
+3.[华南理工大学研究生学位（毕业）论文开题报告、中期考核LaTeX模板](https://github.com/mengchaoheng/SCUT_Report_Latex)
 
-4.[华南理工大学研究生学位（毕业）论文文献综述LaTeX模板](https://github.com/woshisangea/SCUT_Review_Latex)
+4.[华南理工大学研究生学位（毕业）论文文献综述LaTeX模板](https://github.com/mengchaoheng/SCUT_Review_Latex)
 
 鉴于大家快毕业了才会来本网站查看，所以开题有关的latex模板还需要大家帮忙传播出去给需要的同学。
 
@@ -24,9 +24,9 @@ latex和office在写论文、写slides时只是不同的工具，就像是两把
 
 ## 预备工作
 
-> **Note:** 本模板不再利用Lyx，直接使用TeXstudio或者vscode进行编辑，这类似IDE。vscode的一些使用技巧以及快捷键可参考其他教程(百度vscode latex)，这里仅仅给出配置文件`settings_files/settings.json`。详情移步[讨论区](https://github.com/woshisangea/SCUT_thesis/discussions)的[vscode配置](https://github.com/woshisangea/SCUT_thesis/discussions/6)。有什么问题都可以在讨论区交流。
+> **Note:** 本模板不再利用Lyx，直接使用TeXstudio或者vscode进行编辑，这类似IDE。vscode的一些使用技巧以及快捷键可参考其他教程(百度vscode latex)，这里仅仅给出配置文件`settings_files/settings.json`。详情移步[讨论区](https://github.com/mengchaoheng/SCUT_thesis/discussions)的[vscode配置](https://github.com/mengchaoheng/SCUT_thesis/discussions/6)。有什么问题都可以在讨论区交流。
 
-使用之前可先阅读本文模板编译后生成的使用说明[scutthesis.pdf](https://github.com/woshisangea/SCUT_thesis/blob/master/scutthesis.pdf)文件、并有选择性地阅读[《一份（不太）简短的LATEX 2ε 介绍》](https://github.com/CTeX-org/lshort-zh-cn.git) 入门。还可以阅读[tutorial](https://github.com/woshisangea/SCUT_thesis/tree/master/tutorial)里的`scutthesis说明.pdf`文件，这是旧模板的文件，可以参考旧模板的东西。
+使用之前可先阅读本文模板编译后生成的使用说明[scutthesis.pdf](https://github.com/mengchaoheng/SCUT_thesis/blob/master/scutthesis.pdf)文件、并有选择性地阅读[《一份（不太）简短的LATEX 2ε 介绍》](https://github.com/CTeX-org/lshort-zh-cn.git) 入门。还可以阅读[tutorial](https://github.com/mengchaoheng/SCUT_thesis/tree/master/tutorial)里的`scutthesis说明.pdf`文件，这是旧模板的文件，可以参考旧模板的东西。
 
 若不使用在线编译overleaf，则编译之前需要先安装[texlive](https://www.tug.org/texlive/)，找到对应系统（Linux，win，macOS）的版本。注意macOS是MacTeX。
 
@@ -34,7 +34,7 @@ latex和office在写论文、写slides时只是不同的工具，就像是两把
 
 编译`scutthesis.tex`文件，生成论文pdf文件即`scutthesis.pdf`，共有四种方法，任选其一：
 
-1.使用VSCode, 详情参考[讨论区vscode配置](https://github.com/woshisangea/SCUT_thesis/discussions/6)，也可以参考[zhuohoudeputao](https://github.com/zhuohoudeputao)做的[环境配置视频](hihihttps://www.bilibili.com/video/BV1jT4y1e7QT)。基本思路为安装LaTeX Workshop插件，在`settings.json`中修改相关字段为`settings_files/settings.json`中的值。以前就有在使用vscode的同学需要把该`settings.json`文件的部分内容添加到自己的.json文件。第一次使用vscode的同学直接覆盖就行。在vscode配置使用xelatexmk进行编译，基本步骤为先点击（激活）要编译的某个.tex文件界面，此时最左侧会出现`TeX`工具栏，点击工具栏后，展开`Build LaTeX project`（`构建LaTeX项目`），点击里面的xelatexmk编译链（也可以尝试`xelatex -> biber -> xelatex*2`，其他编译链/配方则提供给有其他需求的同学使用，通常不需要关心），下方编译标志由转圈变成打勾后，然后`View LaTeX PDF`即可查看pdf文件。注意一定要先点击激活要编译的文件，再去点编译，否则识别不到。`settings.json`文件可以自定义配置，若不喜欢保存自动编译，可以改为手动，第一次编译过后会记住上次编译选项，此时只需要点击`构建LaTeX项目`即可（省略展开`Build LaTeX project`这一步骤）。（2022年起添加的方法，建议有编程基础、追求效率的同学使用）
+1.使用VSCode, 详情参考[讨论区vscode配置](https://github.com/mengchaoheng/SCUT_thesis/discussions/6)，也可以参考[zhuohoudeputao](https://github.com/zhuohoudeputao)做的[环境配置视频](hihihttps://www.bilibili.com/video/BV1jT4y1e7QT)。基本思路为安装LaTeX Workshop插件，在`settings.json`中修改相关字段为`settings_files/settings.json`中的值。以前就有在使用vscode的同学需要把该`settings.json`文件的部分内容添加到自己的.json文件。第一次使用vscode的同学直接覆盖就行。在vscode配置使用xelatexmk进行编译，基本步骤为先点击（激活）要编译的某个.tex文件界面，此时最左侧会出现`TeX`工具栏，点击工具栏后，展开`Build LaTeX project`（`构建LaTeX项目`），点击里面的xelatexmk编译链（也可以尝试`xelatex -> biber -> xelatex*2`，其他编译链/配方则提供给有其他需求的同学使用，通常不需要关心），下方编译标志由转圈变成打勾后，然后`View LaTeX PDF`即可查看pdf文件。注意一定要先点击激活要编译的文件，再去点编译，否则识别不到。`settings.json`文件可以自定义配置，若不喜欢保存自动编译，可以改为手动，第一次编译过后会记住上次编译选项，此时只需要点击`构建LaTeX项目`即可（省略展开`Build LaTeX project`这一步骤）。（2022年起添加的方法，建议有编程基础、追求效率的同学使用）
 
 2.使用TeXstudio，首次编译建议从主文件`scutthesis.tex`开始编译，首先在`TeXstudio的Options->Configure TeXstudio->build`中，编译器(Dufault Compiler)选择`XeLaTeX`，默认文献工具(Default Bibliography Tool)选`Biber`，构建并查看（build & view） 按照`scutthesis.pdf`中的图2-1进行设置（点击右侧扳手符号进行设置，分别选择`recompile-bibliography`、`Defualt compiler`、`Defualt Viewer`并点add到右侧栏中），也可以使用默认的Compile & View，只不过此时不会自动更新参考文献著录。(模板最初使用的编辑器，建议喜欢本地编辑、平时较少倒腾电脑、较少编程、追求稳定的同学使用)
 
@@ -44,7 +44,7 @@ latex和office在写论文、写slides时只是不同的工具，就像是两把
 
 1)直接在overleaf网页导入，模板地址在[SCUT_overleaf](https://www.overleaf.com/latex/templates/scut-thesis/bgybznvkjdfx)，更多使用说明参考[overleaf文档](https://www.overleaf.com/learn)。（显然对无编程基础的同学最友好）
 
-2)当然也可以在命令行窗口运行 `git clone https://github.com/woshisangea/SCUT_thesis.git` 得到本项目后切换到 `overleaf` 分支。将文件导入到overleaf，如果文件太大就删除.git文件等隐藏文件。（适合于希望参与开发、完善overleaf版本的同学）
+2)当然也可以在命令行窗口运行 `git clone https://github.com/mengchaoheng/SCUT_thesis.git` 得到本项目后切换到 `overleaf` 分支。将文件导入到overleaf，如果文件太大就删除.git文件等隐藏文件。（适合于希望参与开发、完善overleaf版本的同学）
 
 3)还可以在本页面将master branch改为选择overleaf分支后在download本项目等.zip文件，然后上传overleaf。
 
@@ -86,7 +86,7 @@ latex和office在写论文、写slides时只是不同的工具，就像是两把
 
 > **Note:** 维基百科：BibTeX is both a bibliographic flat-file database file format and a software program for processing these files to produce lists of references (citations). The BibTeX file format is a widely used standard with broad support by reference management software.
 
-本模板最主要的改动是参考文献使用BibLaTeX（Biber）包，而不是原来的BibTeX（仍然使用这种格式，但不再使用这种软件/程序），因此不再需要.bst文件。具体词汇含义可查看百科词条[BibTeX](https://en.wikipedia.org/wiki/BibTeX)和[Biber](https://en.wikipedia.org/wiki/Biber_(LaTeX))。在这项改动之后，参考文献部分的格式符合国标gb7714-2015，当然要注意进行适当的设置，因为根据学校的论文撰写规范，有的信息是不需要显示在参考文献著录里的。每年都有同学提问为什么参考文献的显示和学校发布的撰写规范有一点点不同，详情到issue和讨论区查看，但简而言之，目前的默认设置是可以用的，已经连续用了那么多届都没问题。感兴趣的同学可以查看biblatex包的[使用说明](https://github.com/woshisangea/SCUT_thesis/blob/master/settings_files/package_Documentation/biblatex-gb7714-2015.pdf)，[package_Documentation](https://github.com/woshisangea/SCUT_thesis/tree/master/settings_files/package_Documentation)文件夹还有其他包的使用说明。而大部分同学不需要关心这些。
+本模板最主要的改动是参考文献使用BibLaTeX（Biber）包，而不是原来的BibTeX（仍然使用这种格式，但不再使用这种软件/程序），因此不再需要.bst文件。具体词汇含义可查看百科词条[BibTeX](https://en.wikipedia.org/wiki/BibTeX)和[Biber](https://en.wikipedia.org/wiki/Biber_(LaTeX))。在这项改动之后，参考文献部分的格式符合国标gb7714-2015，当然要注意进行适当的设置，因为根据学校的论文撰写规范，有的信息是不需要显示在参考文献著录里的。每年都有同学提问为什么参考文献的显示和学校发布的撰写规范有一点点不同，详情到issue和讨论区查看，但简而言之，目前的默认设置是可以用的，已经连续用了那么多届都没问题。感兴趣的同学可以查看biblatex包的[使用说明](https://github.com/mengchaoheng/SCUT_thesis/blob/master/settings_files/package_Documentation/biblatex-gb7714-2015.pdf)，[package_Documentation](https://github.com/mengchaoheng/SCUT_thesis/tree/master/settings_files/package_Documentation)文件夹还有其他包的使用说明。而大部分同学不需要关心这些。
 
 
 > **Note:** 由于有一些数据信息是不需要在参考文献列表中显示，所以复制或从文献管理软件导出文献的元数据时，记得只选择必要的数据而剔除冗余的数据。虽然多出的信息有时候更好看，送审和学校审核也可能可以顺利通过，但为了避免麻烦，最好去除doi等多余信息。
@@ -95,13 +95,13 @@ latex和office在写论文、写slides时只是不同的工具，就像是两把
 
 ## 常见报错解决思路：
 
-编译时如果提示缺乏字体，请安装[settings_files](https://github.com/woshisangea/SCUT_thesis/tree/master/settings_files)里面的字体（win右键安装即可；mac参考官方字体安装教程；linux下类似，需要自行百度）。此外，目前遇到的导致错误的原因大都是以下三种：
+编译时如果提示缺乏字体，请安装[settings_files](https://github.com/mengchaoheng/SCUT_thesis/tree/master/settings_files)里面的字体（win右键安装即可；mac参考官方字体安装教程；linux下类似，需要自行百度）。此外，目前遇到的导致错误的原因大都是以下三种：
 
 1.语法错误，这种借助百度、谷歌很容易解决，按照latex的规范去写就好。
 
 2.和参考文献有关的错误，记住一定检查好bib文件，而bib文件来源于参考文献管理软件如本文推荐的zotero，又或者来源于自己手动建立的文件。一定要设置好导出选项以及格式，同时要设置好编译选项biber(区别于常见的bibtex)。
 
-3.编译器问题，和第二条一样，使用TeXstudio的话，一定要在`Options->Configure TeXstudio->build`中设置好；使用vscode的话，记得按照[讨论区](https://github.com/woshisangea/SCUT_thesis/discussions)设置好vscode编译的配置文件`settings.json`。记住千万不能使用中文路经，也不能时刻开启网盘同步（防止编译时网盘也在读取文件同步，会报错）。一定要打开`scutthesis.tex`文件，选中其使vscode界面位于该文件，才能编译。有时vscode不能加载环境变量，需要从终端启动`code .`。
+3.编译器问题，和第二条一样，使用TeXstudio的话，一定要在`Options->Configure TeXstudio->build`中设置好；使用vscode的话，记得按照[讨论区](https://github.com/mengchaoheng/SCUT_thesis/discussions)设置好vscode编译的配置文件`settings.json`。记住千万不能使用中文路经，也不能时刻开启网盘同步（防止编译时网盘也在读取文件同步，会报错）。一定要打开`scutthesis.tex`文件，选中其使vscode界面位于该文件，才能编译。有时vscode不能加载环境变量，需要从终端启动`code .`。
 
 4.其他问题，关掉生成的PDF，清除所有中间文件再编译一次看看。如win系统双击`clean.bat`文件。或使用TeXstudio的话，点击`Tools->Clean Auxiliary files`。或者vscode位于编译选项上方的清除按钮。
 
@@ -110,7 +110,7 @@ latex和office在写论文、写slides时只是不同的工具，就像是两把
 ## 贡献者
 
 按加入时间顺序：
-  * [woshisangea](https://github.com/woshisangea)
+  * [mengchaoheng](https://github.com/mengchaoheng)
   * [Komari-Koshigaya](https://github.com/Komari-Koshigaya)
   * [zhuohoudeputao](https://github.com/zhuohoudeputao)
   * [PlexusChen](https://github.com/PlexusChen)
