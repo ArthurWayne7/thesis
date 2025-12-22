@@ -26,7 +26,7 @@ latex和office在写论文、写slides时只是不同的工具，就像是两把
 
 > **Note:** 本模板不再利用Lyx，直接使用TeXstudio或者vscode进行编辑，这类似IDE。vscode的一些使用技巧以及快捷键可参考其他教程(百度vscode latex)，这里仅仅给出配置文件`settings_files/settings.json`。详情移步[讨论区](https://github.com/mengchaoheng/SCUT_thesis/discussions)的[vscode配置](https://github.com/mengchaoheng/SCUT_thesis/discussions/6)。有什么问题都可以在讨论区交流。
 
-使用之前可先阅读本文模板编译后生成的使用说明[scutthesis.pdf](https://github.com/mengchaoheng/SCUT_thesis/blob/master/scutthesis.pdf)文件、并有选择性地阅读[《一份（不太）简短的LATEX 2ε 介绍》](https://github.com/CTeX-org/lshort-zh-cn.git) 入门。还可以阅读[tutorial](https://github.com/mengchaoheng/SCUT_thesis/tree/master/tutorial)里的`scutthesis说明.pdf`文件，这是旧模板的文件，可以参考旧模板的东西。使用案例为[本人的学位论文](https://github.com/mengchaoheng/SCUTthesis-mengchaoheng.git)(注意该论文是基于初代模板，而现在的模板已经不断更新)。
+使用之前可先阅读本文模板编译后生成的使用说明[scutthesis.pdf](https://github.com/mengchaoheng/SCUT_thesis/blob/master/scutthesis.pdf)文件、并有选择性地阅读[《一份（不太）简短的LATEX 2ε 介绍》](https://github.com/CTeX-org/lshort-zh-cn.git) 入门。还可以阅读[tutorial](https://github.com/mengchaoheng/SCUT_thesis/tree/master/tutorial)里的`scutthesis说明.pdf`文件，这是旧模板的文件，可以参考旧模板的东西。
 
 若不使用在线编译overleaf，则编译之前需要先安装[texlive](https://www.tug.org/texlive/)，找到对应系统（Linux，win，macOS）的版本。注意macOS是MacTeX。
 
