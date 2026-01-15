@@ -1,87 +1,501 @@
-\chapter{模板简介}
-%
-与很多外文杂志社不同，大部分中文期刊都不提供\LaTeX{}模板给投稿者使用，也很少有学校给学生提供官方的毕业论文模板。目前github上的大部分模板都是由学生发起的非官方模板。在此感谢Shun Xu以及yecfly等人的工作，他们的无私贡献使得华南理工大学硕博士毕业论文也可以使用\LaTeX{}撰写。
+\chapter{面向模块化建筑的领域特定草图生成方法研究——基于一致性约束GAN}
 
-本模板是直接修改前人的模板得到的，更详细的介绍可到\parencite{_,_a}下载。本章仅从用户的角度简要介绍模板的使用，而尽量避免涉及\LaTeX{}的模板制作细节（实际上是因为本人也不会）。正如我们使用手机并不需要了解麦克斯韦方程组，使用\LaTeX{}写作也无需了解模板是如何制作的。
 
-\LaTeX{}的源代码保存在后缀名为.tex的文件中。当编写长篇文档时，例如当编写书籍、毕业论文时，单个源文件会使修改、校对变得十分困
-难。将源文件分割成若干个文件，例如将每章内容单独写在一个文件中，会大大简化修改和校对
-的工作。为方便，本文将scutthesis.tex文件称为主文件，而将chapter文件夹的abstract.tex、chapter0x.tex、conclusion.tex等文件称为章节文件。
+\section{引言}
 
-值得注意的是，要每次编译时都更新参考文献著录，TeXstudio软件的选项->设置中的构建并查看、编译器需要设置成如图\ref{TeXstudio}、\ref{setup}所示。此时只需在任意一个文件中点击构建并查看按钮即可编译文档。每次编译都更新参考文献会使得编译时间很长。
+\subsection{研究背景：模块化建筑的发展与挑战}
+近年来，模块化建筑（Modular Construction）已成为建筑、工程和
+施工（AEC）行业最具变革性的创新之一 \citep{lawson2012application,
+Lawson2014}。作为一种颠覆性的解决方案，它旨在解决传统现场密集
+型建造方法中长期存在的低效问题，有助于重振生产力、减少劳动力依赖
+并最大限度地减少材料浪费 \cite{zhai2019internet}。与依赖顺序性现
+场作业的传统方法不同，模块化建筑由在受控环境下预制的标准化体积单元组
+装而成。这种模式实现了并行工作流，能够实施更严格的质量控制，从而显著
+缩短项目交付周期并降低环境足迹。
+
+在结构和美学层面，模块化建筑同样具有显著优势。标准化不仅简化了制造和
+物流流程，还增强了结构的鲁棒性和性能可靠性。模块组装的重复逻辑和可
+扩展性为空间适应性和形式表现力提供了支持。如
+图 \ref{fig:modular_examples} 所示，从高层住宅到特色公建，模块的
+韵律性重复不再被视为一种设计约束，而被日益公认为建筑可读性、构图秩
+序乃至后工业设计表现力的来源。
+
 \begin{figure}[htbp]
-	\centering
-	\includegraphics[scale=0.55]{Fig/TeXstudio.png}
-	\caption{\label{TeXstudio}TeXstudio环境}
+    \centering
+    \includegraphics[width=1\textwidth]{Fig/figure1.png}
+    \caption{模块化建筑典型实例}
+    \label{fig:modular_examples}
 \end{figure}
+
+然而，尽管模块化建筑的接受度日益提高，其设计过程仍受到场外制造和
+现场安装物流所强加的刚性几何、结构及组装参数的制约。特别是立面设计，
+必须在实现视觉连贯性的同时，严格遵守对齐网格、接口协调和拼板逻辑等施
+工原则 \citep{zheng2024integrated}。这一现状促使研究人员探索模块
+化系统的设计句法，即支配组件如何通过空间规则、组合
+逻辑和类型模式进行结合的语法结构。
+
+\subsection{现有生成式设计方法的局限性}
+与此同时，人工智能（AI）技术的进步，特别是生成式深度学习的发展，为加
+速早期建筑探索开辟了新途径。其中，生成对抗网络在将抽象的设
+计概念转化为空间和风格连贯的视觉表征方面展现出巨大潜
+力 \citep{liao2021automated}。
+
+然而，针对模块化设计探索，现有的通用生成模型存在一个关键局限：
+它们本质上对模块化建筑的句法规则（如韵律性单元重复和尺寸标准化）缺乏
+感知。因此，虽然其输出结果在视觉上可能具有吸引力，但往往缺乏模块化系
+统特有的底层结构逻辑，难以作为模块化建筑设计的有效灵感种子。此外，
+大型生成式模型的出现虽然功能强大，但通常作为“黑箱”运行，对领域特定
+约束的细粒度控制能力有限，且需要巨大的计算资源，这构成了快速、迭代
+式设计构思的障碍。
+
+\subsection{本章研究目标}
+为了填补早期设计灵感阶段的这一空白，本章提出了一种轻量级且领域特定的
+模块化生成对抗网络（Modular-GAN）框架。与追求通用的强大生成器不
+同，本章旨在构建一个针对性工具，将模块化设计原则嵌入其中，以高效
+地生成结构连贯且风格多样的草图。本章将详细阐述该框架的构建原理、核
+心组件设计及其在捕捉模块化几何特征方面的有效性。
+
+\section{模块化生成对抗网络(Modular GAN)模型构建}
+\label{sec:model_construction}
+
+本节详细论述所提生成框架的理论基础与具体实现。为了解决模块化建筑生
+成中结构逻辑与形式多样性的矛盾，本研究在Wasserstein GAN的基础
+上，引入了结构化的归纳偏置，并设计了专用的生成器与判别器架构。
+
+\subsection{生成模型选择与理论基础}
+
+\subsubsection{Wasserstein距离与建筑流形学习}
+模块化建筑的高效性常被误认为是以牺牲美学多样性为代价的。本研究采
+用Wasserstein生成对抗网络（WGAN）作为基础框架，原因在于其训练
+的稳定性以及学习平滑、连贯数据分布的能力。
+
+如图 \ref{fig:gan_principle} 所示，该框架遵循生成对抗网络的基
+本博弈逻辑：生成器（G）接收随机噪声并尝试构建符合模块化特征的伪造
+图像，而判别器（D）则通过对抗训练不断提升其区分生成图像与真实设计
+方案的能力。
+
 \begin{figure}[htbp]
-	\centering
-	\includegraphics[scale=0.55]{Fig/setup.png}
-	\caption{\label{setup}TeXstudio编译选项}
+    \centering
+    \includegraphics[width=0.8\textwidth]{Fig/figure3.png}
+    \caption{Modular GAN 框架的基本工作原理示意图}
+    \label{fig:gan_principle}
 \end{figure}
 
-\section{主文件}
-scutthesis.tex文件相当于主函数，调用各章的内容。\LaTeX{}源代码以一个\textbackslash{}documentclass 命令作为开头，它指定了文档使用的文档类。文档类规定了\LaTeX{}源代码所要生成的文档的性质——普通文章、书籍、演示文稿、个人简
-历等等。
-\begin{lstlisting}
-\documentclass[<options>]{<class-name>}
-\end{lstlisting}
-其中class-name为文档类的名称，如\LaTeX{}提供的article, book, report，可在其基础上派
-生的一些文档类或者有其它功能的一些文档类。\LaTeX{}提供的基础文档类见文献\parencite{_c}。还可以自定义文档类，如华南理工大学硕博士论文文档类scutthesis，其实现保存在后缀名为.cls的文件中。可选参数options 为文档类指定选项。
+WGAN在建筑生成方面的优势源于其在建筑设计流形上学习平滑
+映射的能力。与传统GAN使用的Jensen-Shannon散度不同，Wasserstein距
+离（又称推土机距离）为衡量建筑分布之间的差异提供了一个更有意义的
+度量标准。对于建筑草图而言，即便模块布局发生微小扰动，也可能导致结
+构解读上的巨大差异，而Wasserstein距离能够有效捕捉这种结构相似性。
+此外，本研究采用了带有梯度惩罚的WGAN-GP架构 \cite{Gulrajani2017}，通
+过实施Lipschitz约束确保判别器函数的连续性，从而实现了不同模块化配
+置之间更连贯的插值。
+
+\subsubsection{深度网络中的建筑归纳偏置}
+传统的卷积神经网络（CNN）具有平移等变性，这一特性虽然与模块化建筑的
+重复性质相吻合，但标准卷积操作缺乏显式建模长距离结构依赖关系的能力。
+为了解决这一局限性，本研究提出通过引入结构先验编码模块（SPEM），将结
+构化的归纳偏置（Inductive Biases）注入生成网络中。SPEM可以被视为一种
+形式的建筑注意力机制，其设计动机源于人类建筑师在设计模块化系统时，会
+自然地关注结构关系和对齐逻辑。
+
+\subsection{整体网络架构设计}
+
+本研究设计的Modular GAN包含两个核心组件：嵌入了SPEM的生成器和用于
+评估结构连贯性的判别器。网络的整体架构
+如图 \ref{fig:framework_overview} 所示。
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\textwidth]{Fig/figure2.png}
+    \caption{Modular GAN 框架整体架构图：包含嵌入SPEM的生成器与多尺度判别器}
+    \label{fig:framework_overview}
+\end{figure}
+
+生成器旨在将128维的潜在向量映射为 $128 \times 128$ 的高分辨率模块化
+建筑草图。生成过程始于一个线性变换层，将潜在向量映
+射为 $128 \times 8 \times 8$ 的特征张量。随后，网络通过四个阶
+段的渐进式上采样逐步提升分辨率。为了确保生成的图像具备模块化特征，SPEM
+被策略性地嵌入在每一个上采样层之后。
+
+判别器则采用对称的下采样策略，通过一系列卷积层将空间维度逐层压
+缩至 $8 \times 8$，同时通道深度扩展至512，以捕捉多尺度的判别特征。
+具体的网络层级配置详见表 \ref{tab:network_arch}。
+
+\begin{table}[htbp]
+  \centering
+  \caption{Modular GAN 生成器与判别器网络架构参数}
+  \label{tab:network_arch}
+  \small
+  \begin{tabular}{@{}p{0.15\textwidth}p{0.35\textwidth}p{0.15\textwidth}p{0.35\textwidth}@{}}
+    \toprule
+    \textbf{模型} & \textbf{网络层配置} & \textbf{模型} & \textbf{网络层配置} \\
+    \midrule
+    生成器 & 
+    \parbox[t]{0.35\textwidth}{\raggedright 
+    nn.Linear(128, $8 \times 128 \times 8 \times 8$) \\
+    Reshape to (-1, $8 \times 128$, 8, 8) \\
+    nn.BatchNorm2d($8 \times 128$) \\
+    nn.ReLU() \\
+    UpSampleConv($8 \times 128$, $8 \times 128$, 3) \\
+    SPEM($8 \times 128$) \\
+    ... (后续层级逐步上采样) ... \\
+    nn.Tanh() } &
+    
+    判别器 & 
+    \parbox[t]{0.35\textwidth}{\raggedright
+    nn.Conv2d(3, 128, 3, padding=1) \\
+    nn.LayerNorm([128, 128, 128]) \\
+    nn.ReLU() \\
+    ConvMeanPool(128, $2 \times 128$, 3) \\
+    ... (后续层级逐步下采样) ... \\
+    Flatten \\
+    nn.Linear($8 \times 128 \times 8 \times 8$, 1)} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+% \begin{table}[htbp]
+%   \centering
+%   \captionof{table}{Network architectures of the Generator and Discriminator in the Modular GAN Framework}
+%   \label{tab:network_arch}
+%   \small
+%   \begin{tabular}{@{}p{0.15\textwidth}p{0.35\textwidth}p{0.15\textwidth}p{0.35\textwidth}@{}}
+%     \hline
+%     \textbf{Model} & \textbf{Layers} & \textbf{Model} & \textbf{Layers} \\
+%     \hline
+%     Generator & 
+%     \parbox[t]{0.35\textwidth}{\raggedright 
+%     nn.Linear(128, $8 \times 128 \times 8 \times 8$) \\
+%     Reshape to (-1, $8 \times 128$, 8, 8) \\
+    
+%     nn.BatchNorm2d($8 \times 128$) \\
+%     nn.ReLU() \\
+%     UpSampleConv($8 \times 128$, $8 \times 128$, 3) \\
+%     nn.BatchNorm2d($8 \times 128$) \\
+%     nn.ReLU() \\
+%     nn.Conv2d($8 \times 128$, $8 \times 128$, 3, padding=1) \\
+%     SPEM($8 \times 128$) \\
+    
+%     nn.BatchNorm2d($8 \times 128$) \\
+%     nn.ReLU() \\
+%     UpSampleConv($8 \times 128$, $4 \times 128$, 3) \\
+%     nn.BatchNorm2d($4 \times 128$) \\
+%     nn.ReLU() \\
+%     nn.Conv2d($4 \times 128$, $4 \times 128$, 3, padding=1) \\
+%     SPEM($4 \times 128$) \\
+    
+%     nn.BatchNorm2d($4 \times 128$) \\
+%     nn.ReLU() \\
+%     UpSampleConv($4 \times 128$, $2 \times 128$, 3) \\
+%     nn.BatchNorm2d($2 \times 128$) \\
+%     nn.ReLU() \\
+%     nn.Conv2d($2 \times 128$, $2 \times 128$, 3, padding=1) \\
+%     SPEM($2 \times 128$) \\
+    
+%     nn.BatchNorm2d($2 \times 128$) \\
+%     nn.ReLU() \\
+%     UpSampleConv($2 \times 128$, 128, 3) \\
+%     nn.BatchNorm2d(128) \\
+%     nn.ReLU() \\
+%     nn.Conv2d(128, 128, 3, padding=1) \\
+%     SPEM(128) \\
+    
+%     nn.BatchNorm2d(128) \\
+%     nn.ReLU() \\
+%     nn.Conv2d(128, 3, 3, padding=1) \\
+%     nn.Tanh() \\
+%     Reshape to (-1, $3 \times 128 \times 128$)} &
+    
+%     Discriminator & 
+%     \parbox[t]{0.35\textwidth}{\raggedright
+%     nn.Conv2d(3, 128, 3, padding=1) \\
+    
+%     nn.LayerNorm([128, 128, 128]) \\
+%     nn.ReLU() \\
+%     nn.Conv2d(128, 128, 3, padding=1) \\
+%     nn.LayerNorm([128, 128, 128]) \\
+%     nn.ReLU() \\
+%     ConvMeanPool(128, $2 \times 128$, 3) \\
+    
+%     nn.LayerNorm([$2 \times 128$, 64, 64]) \\
+%     nn.ReLU() \\
+%     nn.Conv2d($2 \times 128$, $2 \times 128$, 3, padding=1) \\
+%     nn.LayerNorm([$2 \times 128$, 64, 64]) \\
+%     nn.ReLU() \\
+%     ConvMeanPool($2 \times 128$, $4 \times 128$, 3) \\
+    
+%     nn.LayerNorm([$4 \times 128$, 32, 32]) \\
+%     nn.ReLU() \\
+%     nn.Conv2d($4 \times 128$, $4 \times 128$, 3, padding=1) \\
+%     nn.LayerNorm([$4 \times 128$, 32, 32]) \\
+%     nn.ReLU() \\
+%     ConvMeanPool($4 \times 128$, $8 \times 128$, 3) \\
+    
+%     nn.LayerNorm([$8 \times 128$, 16, 16]) \\
+%     nn.ReLU() \\
+%     nn.Conv2d($8 \times 128$, $8 \times 128$, 3, padding=1) \\
+%     nn.LayerNorm([$8 \times 128$, 16, 16]) \\
+%     nn.ReLU() \\
+%     ConvMeanPool($8 \times 128$, $8 \times 128$, 3) \\
+    
+%     nn.LayerNorm([$8 \times 128$, 8, 8]) \\
+%     nn.ReLU() \\
+%     nn.Conv2d($8 \times 128$, $8 \times 128$, 3, padding=1) \\
+%     nn.LayerNorm([$8 \times 128$, 8, 8]) \\
+%     nn.ReLU() \\
+%     ConvMeanPool($8 \times 128$, $8 \times 128$, 3) \\
+    
+%     Flatten \\
+%     nn.Linear($8 \times 128 \times 8 \times 8$, 1)} \\
+%     \hline
+%   \end{tabular}
+% \end{table}
+
+\subsection{生成器基础组件详解}
+
+为了支撑高效的图像生成，生成器的分辨率提升管道构建在两个基础组
+件之上：上采样卷积单元（UpSampleConv）和残差块（Residual Block）。
+
+\textbf{1. 上采样卷积单元（UpSampleConv）：} 
+如图 \ref{fig:upsample_conv} 所示，该单元通过两阶段过程将特征图
+分辨率从 $C \times H \times W$ 提升至 $C \times 2H \times 2W$。
+首先，利用通道复制机制（Channel Repeat）将特征维度扩展四倍，建立
+冗余表征；随后，应用深度到空间的像素重组（Pixel Shuffle）操
+作 \cite{Shi2016} 将通道信息重新排列至空间维度。相比传统的插值上
+采样，这种方法能够通过反向传播学习自适应的上采样核，并在最后的卷积
+层中平滑特征，有效减少了生成图像中的棋盘格伪影。
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Fig/figure4.png}
+    \caption{上采样卷积单元架构：展示通道复制与像素重组变换过程}
+    \label{fig:upsample_conv}
+\end{figure}
+
+\textbf{2. 残差块（Residual Block）：} 
+如图 \ref{fig:residual_block} 所示，生成器集成了残差块以增强
+特征学习和梯度流稳定性。残差块包含主变换路径和捷径（Shortcut）路径。主
+路径包含一系列归一化、激活和卷积操作，而捷径路径则执行恒等映射。两者
+的逐元素相加使得网络能够同时学习增量特征变换和保留原始信息，确保了深
+层架构下的梯度传播稳定性 \cite{He2016}。
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Fig/figure5.png}
+    \caption{残差块详细架构：展示主变换路径与捷径连接}
+    \label{fig:residual_block}
+\end{figure}
+
+\subsection{结构先验编码模块(SPEM)原理与实现}
+
+针对模块化建筑图像中固有的几何重复性与结构刚性特征，本研究设计了结
+构先验编码模块（SPEM）。不同于传统的特征增强策略，SPEM引入了一条
+轻量级但具备结构感知能力的修正路径，能够在保持计算效率的同时选择性
+地增强空间模式。
+
+\subsubsection{SPEM 内部机制}
+如图 \ref{fig:spem_arch} 所示，SPEM 的内部处理流程包含三个关键步骤：
+
+1.  **通道降维（Channel Reduction）：** 首先利用 $1 \times 1$ 卷
+积对输入特征图进行降维。这一操作构建了一个信息瓶颈，迫使网络滤除噪声，
+聚焦于最核心的结构化特征。
+    
+2.  **结构先验编码（Structure Prior Encoder, SPE）：** 降维后的特
+征进入SPE子网络。该子网络采用标准 $3 \times 3$ 卷积配合深度卷
+积（Depthwise Convolution）。从信号处理的角度来看，SPE中的深度卷
+积充当了一组空间感知滤波器，能够自适应地响应不同的建筑模式。这
+对于模块化建筑尤为重要，因为结构模式往往在保持底层几何关系的同时
+，在尺度和方向上存在变化。
+
+3.  **特征恢复与残差融合：** 经过结构编码后，利用第二
+个 $1 \times 1$ 卷积将特征图恢复至原始维度。为了保持原始语义
+信息的连续性，SPEM采用了残差连接机制，将增强后的特征与原始输入相加。
+
+SPEM在第 $l$ 层的前向传播计算过程可由公式(\ref{eq:reduced})
+至(\ref{eq:out})表示：
+
+\begin{align}
+  F_{\text{reduced}} &= \text{Conv}_{1 \times 1}(F_l) \label{eq:reduced} \\
+  F_{\text{encoded}} &= \text{SPE}(F_{\text{reduced}}) \label{eq:encoded} \\
+  F_{\text{restored}} &= \text{Conv}_{1 \times 1}(F_{\text{encoded}}) \label{eq:restored} \\
+  F_{\text{out}} &= F_l + F_{\text{restored}} \label{eq:out}
+\end{align}
+
+其中，$F_l$ 表示第 $l$ 层的输入特征图，$\text{SPE}(\cdot)$ 表示
+结构先验编码器操作。
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Fig/figure6.png}
+    \caption{结构先验编码器 (SPE) 网络架构图}
+    \label{fig:spem_arch}
+\end{figure}
+
+综上所述，通过在生成过程中引入SPEM，实际上是向网络注入了一
+种对几何敏感的注意力机制，引导网络在不同尺度上保持模块的规律
+性。这种设计使得生成器产出的建筑草图在重复单元的对齐精度、模块
+边界的锐利度以及整体布局的空间连贯性上均有显著提升。
 
 
-document环境当中的内容是文档正文：
-\begin{lstlisting}
-\begin{document}
-正文内容
-\end{document}
-\end{lstlisting}
-正文中包含各章节内容：
-\begin{lstlisting}
-\include{abstract} % 中英文摘要
-\tableofcontents	% 目录
-\listoftables	% 表格目录（可选）
-\listoffigures	% 插图目录（可选）
-\include{symbols}	% 符号对照表(可选)
-\include{abbreviation} 	% 缩略词	
-...
-\include{chapter01}	% 第一章
-\include{chapter02} % 第二章
-\include{chapter03} % 第三章
-% 自行根据需要添加章节。
-...
-\include{conclusion} % 结论
-...
-\printbibliography	% 参考文献著录
-\include{appendix} % 附录
-\include{pub} % 成果
-\include{ack} % 致谢
-\end{lstlisting}
-其中$\%$之后的内容为注释，...表示省略其他代码，仅保留论文内容主体部分。\textbackslash{}include\{xxx\}指令用于包含xxx.tex文件的内容，各章节的内容主要在xxx.tex中保存。在\textbackslash{}documentclass 和\textbackslash{}begin\{document\} 之间的位置称为导言区。在导言区中一般会使用\textbackslash{}usepackage 调用宏包，以及会进行对文档的全局设置。本模板的导言区除调用所需的宏包外，还进行了页眉页脚的设置。有的模板会把所有调用宏包的指令放到一个.sty宏包文件中，页面的设置放在文档类文件.cls文件中。因本人时间有限，就不做整理，欢迎有志之士加入完善。使用本模板并不需要了解导言区的指令，在需要时额外添加即可（要注意宏包冲突）。特别地，\textbackslash{}includeonly\{xxx\}指令用于使文档仅编译xxx.tex文件的内容，这就是分章节包含（include）的好处，可大大减少编译时间。
+\section{融合模块化一致性约束的风格迁移机制}
+\label{sec:style_transfer}
 
-将封面打印保存为 thesis\_cover.pdf 文件，硕士使用master\_cover.docx ，博士使用 doctor\_cover.doc 。如果有更新版本的封面，可自行替换。文档类默认是博士论文，下面指令将控制添加封面与否：
-\begin{lstlisting}
-\documentclass[unicode,master,pdfcover]{scutthesis}	% 使用pdf文件封面的 硕士模板
-\documentclass[unicode,master]{scutthesis}	% 不使用pdf文件封面的 硕士模板
-\documentclass[unicode,pdfcover]{scutthesis}	% 使用pdf文件封面的博士模板
-\documentclass[unicode]{scutthesis}	% 不使用pdf文件封面的博士模板
-\end{lstlisting}
-不使用thesis\_cover.pdf 文件指定的封面时，将使用草稿封面。草稿封面也可以减少编译时间，因此可以在最终提交论文时再使用论文封面。草稿封面用以下指令设置：
-\begin{lstlisting}
-%%%%%%%%%%%%%草稿封面设置%%%%%%%%%%%%%	
-\title{LaTeX模板}	
-\author{作者姓名}	
-\supervisor{指导教师：xxx\ 教授}	
-\institute{华南理工大学}	
-\date{2020年5月20日}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\end{lstlisting}
-\section{章节文件}
-chapter文件夹的章节文件如chapter0x.tex等，其内容由\textbackslash{}chapter\{章名\}开头。新建一章可新建一个文件并由\textbackslash{}chapter\{新建章名\}开头填写内容即可。节及小节分别用\textbackslash{}section\{新建节名\}、\textbackslash{}subsection\{新建小节名\}命令。
+在模块化建筑的生成设计中，美学风格的融合绝非仅限于视觉纹理与线条特征
+的迁移，更为关键的是必须保持空间模块的几何一致性与重复性逻
+辑 \cite{Brock2019}。为了实现这一目标，本节提出了一种增强型的建筑
+风格融合模块（Architectural Fusion Module, AFM）。该模块基
+于STROTSS（Style Transfer by Relaxed Optimal Transport and 
+Self-Similarity）框架 \cite{Li2021} 构建，并创新性地引入了模块化
+一致性损失（Modular Consistency Loss, MCL），以确保在风格化过程中
+维持建筑固有的模块化结构 \cite{Chen2021}。
 
-正文的的书写和txt文本文件的书写类似。\LaTeX{} 源代码中，空格键和Tab键输入的空白字符视为“空格”。连续的若干个空白字符视为一个空格。一行开头的空格忽略不计。行末的回车视为一个空格；但连续两个回车，也就是空行，会将文字分段。多个空行被视为一个空行。也可以在行末使用\textbackslash{}par 命令分段。在本模板中，英文之间的空格被保留，中文之间的空格被忽略。特别地，摘要，附录，结论等两个字的大纲级别为章的章名，中间使用空格隔开。对此论文撰写规范并没有明文要求，只是为了美观。也可以全部不加空格。一般情况下，在文本文字中添加空格使用\textbackslash{}quad命令，但由于文献\parencite{_d}所述原因，直接使用\textbackslash{}quad命令会报警，因而使用\textbackslash{}texorpdfstring\{\textbackslash{}quad\}\{\}，其中最后一个\{\}里面可以加一个空格，不影响使用。目录二字之间添加空格在scutthesis.cls文件317行设置。
+\subsection{风格融合模块工作流程}
 
-正文本环境中使用公式，即行内公式，需要用两个\$包围，如源码：\$a+b=c\$ 显示为$a+b=c$。使用其他字符可自行百度或阅读参考文献。再次提醒，使用\LaTeX{}撰写论文不需要研究其原理，在达到某种效果（图文显示、公式显示效果）时百度或查书寻找其代码即可。
+本研究提出的风格融合框架采用多输入、多阶段的优化流程，如
+图 \ref{fig:fusion_workflow} 所示。该模块接收两个主要输入：
+\begin{enumerate}
+    \item \textbf{内容图像（Content Image）：} 由前述Modular GAN
+	生成器输出的模块化建筑草图，它提供了建筑的基本体量、模块划分和透
+	视关系。
+    \item \textbf{风格参考图（Style Reference）：} 用户提供的包
+	含特定美学特征（如包豪斯风格、传统纹理等）的图像。
+\end{enumerate}
 
-综上，论文撰写只需要将自己的文本（包含行内公式）放到相应的章节处，并添加行间公式、图表环境并填写图表即可。行间公式、图表将在下一章介绍。
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\textwidth]{Fig/figure7.png}
+    \caption{模块化建筑风格融合框架工作流程图}
+    \label{fig:fusion_workflow}
+\end{figure}
 
+融合网络旨在合成一个新的建筑草图，使其在保留前者空间布局的同时，
+习得后者的视觉语义风格。如图 \ref{fig:fusion_schematic} 所示，整
+个优化过程由一个复合损失函数驱动，该函数由三部分组成：内容损失、风格
+损失以及本研究提出的模块化一致性损失。总损失函数定义如下：
+
+\begin{equation}
+  \mathcal{L}_{\text{total}} = \mathcal{L}_{\text{style}} + w_c \mathcal{L}_{\text{content}} + w_m \mathcal{L}_{\text{mcl}} 
+  \label{eq:total-loss}
+\end{equation}
+
+其中，$w_c$ 和 $w_m$ 分别为内容损失和模块化一致性损失的权重系数，用于
+平衡结构保持与风格迁移的程度。
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\textwidth]{Fig/figure8.png}
+    \caption{建筑风格融合模块整体架构示意图}
+    \label{fig:fusion_schematic}
+\end{figure}
+
+\subsection{基础损失函数：内容与风格的解耦}
+
+为了确保生成的草图既能维持高层级的布局结构，又能获得参考图像的风格
+语义，本研究在预训练的VGG16网络 \cite{Simonyan2015} 构建的共享特
+征空间中计算损失函数。
+
+\subsubsection{基于自相似性的内容损失}
+内容损失 $\mathcal{L}_{\text{content}}$ 的设计旨在保留生成
+草图 $I_g$ 的整体空间布局和设计意图。受局部自相似性保持机
+制 \cite{Li2021} 的启发，我们在 $N$ 个空间位置提取超
+列（Hypercolumn）描述符 \cite{Hariharan2015}。
+
+设 $A_{g} = \{a_g^i\}_{i=1}^N$ 和 $A_{c} = \{a_c^i\}_{i=1}^N$ 分别
+为生成图像和内容参考图像的特征描述符集合。对每个描述符进行归一
+化后，计算成对的余弦距离以构建局部自相似矩阵 \cite{Shechtman2007}：
+
+\begin{equation}
+  D_{g}^{ij} = 1 - \frac{a_g^i \cdot a_g^j}{\|a_g^i\| \|a_g^j\|}, \quad
+  D_{c}^{ij} = 1 - \frac{a_c^i \cdot a_c^j}{\|a_c^i\| \|a_c^j\|}
+  \label{eq:distance}
+\end{equation}
+
+内容损失定义为这两个距离矩阵之间的Frobenius范数平方：
+
+\begin{equation}
+  \mathcal{L}_{\text{content}} = \frac{1}{N^2} \sum_{i=1}^{N} \sum_{j=1}^{N} \left( D_{g}^{ij} - D_{c}^{ij} \right)^2
+  \label{eq:content-loss}
+\end{equation}
+
+该公式强制网络保留语义区域之间的局部关系结构 \cite{Gatys2016}，从而确
+保生成的建筑布局与原始草图在拓扑上保持一致。
+
+\subsubsection{基于最优传输的风格损失}
+风格损失 $\mathcal{L}_{\text{style}}$ 侧重于对齐生成图像 $I_g$ 与风
+格参考图 $I_s$ 之间的视觉特征（如纹理、线条强度和材质感）。为此，本研
+究采用松弛推土机距离（Relaxed Earth Mover's Distance, REMD）作为
+特征集对齐的主要度量标准 \cite{Cuturi2013}，并结合矩匹配
+（Moment Matching）以保持强度一致性 \cite{Huang2017}。
+
+设 $A_{g} = \{a_g^i\}_{i=1}^{N_g}$ 和 
+$A_{s} = \{a_s^j\}_{j=1}^{N_s}$ 分别为从 $I_g$ 和 $I_s$ 中提取
+的特征集。两组特征集之间的REMD定义为：
+
+\begin{equation}
+  \text{REMD}(A_g, A_s) = \max\left\{ \frac{1}{N_g} \sum_{i=1}^{N_g} \min_{j} \|a_g^i - a_s^j\|_2, \;
+  \frac{1}{N_s} \sum_{j=1}^{N_s} \min_{i} \|a_s^j - a_g^i\|_2 \right\}
+  \label{eq:remd}
+\end{equation}
+
+为了进一步确保全局风格的连贯性，我们在损失函数中加入了均值和协方差约
+束。完整的风格损失公式如下：
+
+\begin{equation}
+  \mathcal{L}_{\text{style}} = \text{REMD}(A_g, A_s) + \lambda_\mu \|\mu_g - \mu_s\|_2^2 + \lambda_\Sigma \|\Sigma_g - \Sigma_s\|_F^2
+  \label{eq:style-loss}
+\end{equation}
+
+其中，$\mu$ 和 $\Sigma$ 分别代表特征集的均值向量和协方差矩
+阵，$\lambda_\mu$ 和 $\lambda_\Sigma$ 为平衡系数。这种设计确保了
+在融合过程中，结构细节和全局风格特征都能被忠实地迁移 \cite{Li2017}。
+
+\subsection{模块化一致性损失 (MCL)}
+
+针对模块化建筑的独特属性——即标准化单元的重复性和严格的空间对齐要求—
+—本研究提出了模块化一致性损失（Modular Consistency Loss, MCL）。该
+损失函数通过度量生成图像中不同模块化区域深层特征表示的相似性，来强制
+实现模块表达的统一性。
+
+具体而言，生成的草图首先被划分为 $N$ 个局部模块化补
+丁（Patches） $\{M_1, M_2, ..., M_N\}$。对于每一个补丁 $M_i$，利用
+VGG19网络的中间层（如 \texttt{conv4\_2}）提取其特征
+嵌入 $F(M_i)$ \cite{Simonyan2015}。模块化一致性损失计算为所有补
+丁对之间的平均余弦相异度，并引入空间邻近度进行加权：
+
+\begin{equation}
+  \mathcal{L}_{\text{MCL}} = \frac{1}{N(N-1)} \sum_{i=1}^{N} \sum_{\substack{j=1 \\ j\neq i}}^{N} w_{ij} \cdot \left(1 - \frac{F(M_i) \cdot F(M_j)}{\|F(M_i)\| \|F(M_j)\|}\right)
+  \label{eq:mcl-loss-improved}
+\end{equation}
+
+其中，$w_{ij} = \exp\left(-\frac{\|p_i - p_j\|^2}{\sigma^2}\right)$ 是基于补丁中心坐标 $p_i$ 和 $p_j$ 的空间高斯核函数。该公式有效地促进了模块单元的一致性表达，防止了模块化布局中常见的结构变形或过度风格化问题。
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\textwidth]{Fig/figure9.png}
+    \caption{模块化一致性损失 (MCL) 机制架构图}
+    \label{fig:mcl}
+\end{figure}
+
+如图 \ref{fig:mcl} 所示，MCL机制系统地处理模块化补丁，通过特征提
+取和相似度计算，确保重复的建筑元素在融合过程中保持一致。通过用这种模
+块化一致性机制替代传统的基于线条的正则化，融合模块能够更好地契合模块
+化施工的需求，兼顾风格丰富性与结构连贯性。最终生成的建筑草图不仅反映
+了用户的风格意图，更严格遵守了模块化建筑系统的重复与对齐逻
+辑 \cite{liu2021swin}。
+
+\subsection{MCL的优化动力学分析}
+
+MCL的引入根本性地改变了风格迁移问题的优化景
+观（Optimization Landscape）。与传统的内容和风格损失不同，后者通常独
+立作用于图像的不同方面，而MCL引入了空间分布区域之间的耦合关系，构建
+了一个更为复杂但在建筑学意义上更为合理的目标函数 \cite{Zhao2024}。
+
+MCL中的空间加权机制可以被理解为一种“建筑局部性偏置”
+（Architectural Locality Bias）：即空间上相邻的模块被期望比远距离模
+块表现出更高的一致性。这一设计选择反映了模块化建筑的物理约束，即相邻模
+块必须保持精确的接口对齐以满足施工
+要求 \cite{Huang20172, Barz2021}。
+
+从优化的角度来看，MCL在损失景观中引入了额外的临界点，这些点对应于具有
+建筑一致性的解。高斯加权确保了这些临界点之间的平滑过渡，从而促进了融合
+过程中的稳定收敛 \cite{Chen2022b}。
