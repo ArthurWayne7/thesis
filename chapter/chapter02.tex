@@ -22,7 +22,7 @@ Lawson2014}。作为一种颠覆性的解决方案，它旨在解决传统现场
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=1\textwidth]{Fig/figure1.png}
+    \includegraphics[width=1\textwidth]{Fig1/figure1.png}
     \caption{模块化建筑典型实例}
     \label{fig:modular_examples}
 \end{figure}
@@ -76,7 +76,7 @@ Lawson2014}。作为一种颠覆性的解决方案，它旨在解决传统现场
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.8\textwidth]{Fig/figure3.png}
+    \includegraphics[width=0.8\textwidth]{Fig1/figure3.png}
     \caption{Modular GAN 框架的基本工作原理示意图}
     \label{fig:gan_principle}
 \end{figure}
@@ -106,7 +106,7 @@ WGAN在建筑生成方面的优势源于其在建筑设计流形上学习平滑
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=1\textwidth]{Fig/figure2.png}
+    \includegraphics[width=1\textwidth]{Fig1/figure2.png}
     \caption{Modular GAN 框架整体架构图：包含嵌入SPEM的生成器与多尺度判别器}
     \label{fig:framework_overview}
 \end{figure}
@@ -267,7 +267,7 @@ WGAN在建筑生成方面的优势源于其在建筑设计流形上学习平滑
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.8\textwidth]{Fig/figure4.png}
+    \includegraphics[width=0.8\textwidth]{Fig1/figure4.png}
     \caption{上采样卷积单元架构：展示通道复制与像素重组变换过程}
     \label{fig:upsample_conv}
 \end{figure}
@@ -281,7 +281,7 @@ WGAN在建筑生成方面的优势源于其在建筑设计流形上学习平滑
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.8\textwidth]{Fig/figure5.png}
+    \includegraphics[width=0.8\textwidth]{Fig1/figure5.png}
     \caption{残差块详细架构：展示主变换路径与捷径连接}
     \label{fig:residual_block}
 \end{figure}
@@ -326,7 +326,7 @@ SPEM在第 $l$ 层的前向传播计算过程可由公式(\ref{eq:reduced})
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.8\textwidth]{Fig/figure6.png}
+    \includegraphics[width=0.8\textwidth]{Fig1/figure6.png}
     \caption{结构先验编码器 (SPE) 网络架构图}
     \label{fig:spem_arch}
 \end{figure}
@@ -363,7 +363,7 @@ Self-Similarity）框架 \cite{Li2021} 构建，并创新性地引入了模块�
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=1\textwidth]{Fig/figure7.png}
+    \includegraphics[width=1\textwidth]{Fig1/figure7.png}
     \caption{模块化建筑风格融合框架工作流程图}
     \label{fig:fusion_workflow}
 \end{figure}
@@ -383,7 +383,7 @@ Self-Similarity）框架 \cite{Li2021} 构建，并创新性地引入了模块�
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=1\textwidth]{Fig/figure8.png}
+    \includegraphics[width=1\textwidth]{Fig1/figure8.png}
     \caption{建筑风格融合模块整体架构示意图}
     \label{fig:fusion_schematic}
 \end{figure}
@@ -471,7 +471,7 @@ VGG19网络的中间层（如 \texttt{conv4\_2}）提取其特征
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=1\textwidth]{Fig/figure9.png}
+    \includegraphics[width=1\textwidth]{Fig1/figure9.png}
     \caption{模块化一致性损失 (MCL) 机制架构图}
     \label{fig:mcl}
 \end{figure}
@@ -499,3 +499,321 @@ MCL中的空间加权机制可以被理解为一种“建筑局部性偏置”
 从优化的角度来看，MCL在损失景观中引入了额外的临界点，这些点对应于具有
 建筑一致性的解。高斯加权确保了这些临界点之间的平滑过渡，从而促进了融合
 过程中的稳定收敛 \cite{Chen2022b}。
+
+\section{实验设置与数据集构建}
+\label{sec:experiments_setup}
+
+为了验证本章提出的Modular GAN框架在生成质量、结构连贯性以及风格迁移
+方面的有效性，本节详细阐述了实验所用的数据集构建流程、预处理方法以及具体
+的网络训练参数设置。
+
+\subsection{模块化建筑草图数据集的构建与预处理}
+
+数据是驱动深度生成模型学习领域特征的基础。由于目前缺乏公开的、专门针
+对模块化建筑的高质量草图数据集，本研究采用了Qian等人 \cite{Qian2022} 建立
+的系统化数据处理流程，并针对模块化建筑的特性进行了扩展和优化。
+
+\subsubsection{数据采集与筛选}
+研究团队首先通过网络爬虫技术从公开建筑数据库中采集了大量真实建筑图像。为
+了确保训练数据的质量并使其适用于模块化生成任务，我们实施了严格的质量
+控制筛选标准：
+\begin{enumerate}
+    \item \textbf{形态完整性：} 图像必须包含完整的建筑立面或体量，避免
+	局部遮挡或过度裁剪，以保证模型能够学习到全局的结构逻辑。
+    \item \textbf{模块化特征显著性：} 筛选出的建筑必须表现出明显的模
+	块化特征，如清晰的单元边界、重复的结构模式以及标准化的接口细节。
+    \item \textbf{视觉清晰度：} 剔除背景杂乱、光照条件极端或分辨
+	率过低的图像，确保后续边缘提取的准确性。
+\end{enumerate}
+
+\subsubsection{基于XDOG的草图风格化处理}
+为了模拟概念设计阶段的草图效果，并减少色彩和光照对结构学习的干扰，本研
+究采用扩展高斯差分算
+子（eXtended Difference-of-Gaussians, XDOG）\cite{Winnemoller2012} 将
+采集的照片转化为线条清晰的建筑草图。
+
+XDOG算法通过调整高斯模糊的参数 $\sigma$ 和阈值 $\epsilon$，能够灵活控
+制线条的粗细和风格化程度。本实验沿用了Qian等人验证过的参数配置，以保留
+建筑的关键几何轮廓同时去除冗余的纹理噪声。经过处理，最终构建了一个包
+含1200张高质量模块化建筑草图的基础数据
+集。如图 \ref{fig:dataset_samples} 所示，处理后的草图有效地保留了模
+块化单元的几何特征和整体形态。
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\textwidth]{Fig1/figure10.png}
+    \caption{模块化建筑数据集样本示例：原始图像（上）与经过XDOG处理后的草图（下）}
+    \label{fig:dataset_samples}
+\end{figure}
+
+\subsection{实验环境与网络训练参数设置}
+
+\subsubsection{实验硬件与软件环境}
+本章涉及的所有实验均在统一的计算平台上完成，以确保结果的可复现性。硬件
+配置包括 Intel Core i5-13400F CPU、32GB DDR4 内存以
+及 NVIDIA GeForce RTX 4070 GPU（12GB 显存）。软件环境基于 Python 编程
+语言和 PyTorch 深度学习框架实现。
+
+\subsubsection{网络优化与超参数配置}
+为了保证Modular GAN框架的稳定收敛，针对不同模块采用了差异化的优化策略：
+
+\begin{itemize}
+    \item \textbf{生成与判别模块优化：} 采用Adam优
+	化器 \cite{Kingma2014} 对生成器和判别器进行参数更新。经过参数敏感性
+	分析（详见第4章讨论），学习率设定为 $0.001$，动量参数设定
+	为 $\beta_1=0.9$ 和 $\beta_2=0.999$。这一配置在保持训练稳定
+	性的同时，能够有效避免模式崩塌。
+    
+    \item \textbf{风格融合模块优化：} 在风格迁移阶段，采用RMSprop优
+	化器对输入图像进行迭代更新，学习率设定为 $0.0025$。为了平衡结构
+	保持与风格注入，损失函数的权重系数设定为：内容损失权重 $w_c = 16$，模
+	块化一致性损失权重 $w_m = 0.005$。
+    
+    \item \textbf{数据增强策略：} 考虑到基础数据量相对有限，为了防止
+	过拟合并提升模型的泛化能力，我们在训练过程中引入了在线数据增强技
+	术。具体操作包括随机水平翻转、中心裁剪以及范
+	围在 $[-10^\circ, 10^\circ]$ 内的随机旋转。通过数据增强，训练集被
+	扩充至4800张，显著提升了模型对不同视角和构图的适应性。
+\end{itemize}
+
+\begin{table}[htbp]
+  \centering
+  \caption{Modular GAN 训练超参数设置一览表}
+  \label{tab:hyperparameters}
+  \begin{tabular}{lcc}
+    \toprule
+    \textbf{参数名称} & \textbf{涉及模块} & \textbf{数值} \\
+    \midrule
+    基础学习率 (Learning Rate) & Generator/Discriminator & 0.001 \\
+    Adam $\beta_1$ & Generator/Discriminator & 0.9 \\
+    Adam $\beta_2$ & Generator/Discriminator & 0.999 \\
+    Batch Size & Training & 32 \\
+    Epochs & Training & 200 \\
+    RMSprop Learning Rate & Fusion Module & 0.0025 \\
+    内容损失权重 ($w_c$) & Fusion Module & 16 \\
+    MCL损失权重 ($w_m$) & Fusion Module & 0.005 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{结果分析与验证}
+\label{sec:results_analysis}
+
+为了全面评估Modular GAN框架的性能，本节从定量指标和定性视觉效果两个维度
+展开分析。首先通过FID指标评估生成图像的分布质量及参数敏感性；其次，展示
+模型在不同风格下的生成效果；随后，通过与真实建筑案例的对比验证生成的几何
+可行性；最后，通过消融实验深入探讨模块化一致性损失（MCL）在维持结构
+完整性方面的关键作用。
+
+\subsection{生成质量的定量评估与参数敏感性分析}
+
+\subsubsection{评价指标：Fréchet Inception Distance (FID)}
+本研究采用Fréchet Inception Distance (FID) \cite{Heusel2017} 作为主要
+的定量评价指标。FID通过计算真实图像分布与生成图像分布在Inception-v3网络
+特征空间中的距离来衡量生成质量，其计算公式如下：
+
+\begin{equation}
+  \text{FID}(r, g) = \|\mu_r - \mu_g\|^2 + \text{Tr}(\Sigma_r + \Sigma_g - 2(\Sigma_r \Sigma_g)^{1/2})
+  \label{eq:fid}
+\end{equation}
+
+其中，$\mu_r, \mu_g$ 分别表示真实图像和生成图像特征向量的均
+值，$\Sigma_r, \Sigma_g$ 表示相应的协方差矩阵。FID数值越低，表明生成图像
+在视觉质量和多样性上越接近真实数据分布。在本实验中，我们随机生成了3,000张
+样本用于计算FID分数，以确保评估结果的统计显著性。
+
+\subsubsection{参数敏感性分析}
+优化器的超参数设置对GAN的收敛质量有显著影响。为了探究最佳训练配置，本研究
+对比了Adam优化器中不同动量参数 $\beta_1$ 和 $\beta_2$ 组合下的FID得
+分。如表 \ref{tab:fid_comparison} 所示，实验结果表明：
+
+\begin{itemize}
+    \item 当 $(\beta_1, \beta_2) = (0.0, 0.9)$ 时，FID高达117.21，说明过低的动量导致训练不稳定，生成分布与真实分布差异较大。
+    \item 当 $(\beta_1, \beta_2) = (0.9, 0.999)$ 时，FID降至最低的87.65，相比前者提升了约31.1\%。这表明较高的动量参数有助于生成器在复杂的模块化几何空间中找到更优的鞍点。
+    \item 进一步调整为 $(0.5, 0.999)$ 时，性能有所回落（FID=101.33），证实了当前参数选择的最优性。
+\end{itemize}
+
+\begin{table}[htbp]
+  \centering
+  \caption{不同Adam优化器参数下的Modular GAN生成质量(FID)对比}
+  \label{tab:fid_comparison}
+  \begin{tabular}{cc}
+    \toprule
+    \textbf{优化器参数 ($\beta_1, \beta_2$)} & \textbf{FID (越低越好)} \\
+    \midrule
+    (0.0, 0.9) & 117.21 \\
+    \textbf{(0.9, 0.999)} & \textbf{87.65} \\
+    (0.5, 0.999) & 101.33 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{模块化草图生成的定性评价}
+
+图 \ref{fig:generated_samples} 展示了Modular GAN在训练收敛后生
+成的代表性模块化建筑草图。从视觉效果来看，模型成功习得了模块化建筑的核
+心句法规则（Syntactic Rules）：
+
+\begin{enumerate}
+    \item \textbf{单元重复性：} 生成的草图展现了标准单元的系统性重复，
+	窗户、阳台等构件在立面上呈现出严格的韵律感，而非随机的纹理堆砌。
+    \item \textbf{接口对齐：} 模块之间的连接边界清晰锐利，垂直方向的
+	承重结构与水平方向的楼板线保持了良好的正交对齐，体现了SPEM模块在捕
+	捉长距离结构依赖方面的有效性。
+    \item \textbf{整体协调性：} 建筑体量比例协调，透视关系准确，具备
+	作为概念设计方案的可读性。
+\end{enumerate}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\textwidth]{Fig1/figure11.png}
+    \caption{Modular GAN 生成的模块化建筑草图示例：展示了清晰的模块边界与结构韵律}
+    \label{fig:generated_samples}
+\end{figure}
+
+\subsection{风格融合效果分析}
+
+为了验证架构融合模块（AFM）的泛化能力，我们将生成的模块化底图与多种
+具有显著差异的建筑风格进行了融合测试。
+
+\subsubsection{现代与未来主义风格融合}
+如图 \ref{fig:fusion_honeycomb} 所示，以
+“蜂巢建筑（Honeycomb Building）”为参考风格时，模型成功将六边形的几
+何母题映射到了正交的模块化网格上，同时保留了底图的体量结构。类似地，
+图 \ref{fig:fusion_capsule} 展示了以日本“中银胶
+囊塔（Nakagin Capsule Tower）”为参考的融合结果，生成的草图精准地复现
+了圆形窗洞和独立的胶囊单元质感，证明了模型对特殊模块化形式的适应能力。
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\textwidth]{Fig1/figure12.png}
+    \caption{基于蜂巢建筑风格的融合生成结果}
+    \label{fig:fusion_honeycomb}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\textwidth]{Fig1/figure13.png}
+    \caption{基于中银胶囊塔风格的融合生成结果}
+    \label{fig:fusion_capsule}
+\end{figure}
+
+\subsubsection{经典风格与纹理迁移}
+图 \ref{fig:fusion_bauhaus} 展示了以包豪斯（Bauhaus）风格为参考的融合
+效果。模型不仅迁移了现代主义简洁的线条和光影质感，还强化了水平向的构
+图逻辑。这些结果表明，AFM模块能够在不破坏模块化结构完整性的前提下，赋予设
+计方案丰富的风格语义，支持跨文化、跨时代的设计探索。
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\textwidth]{Fig1/figure14.png}
+    \caption{基于包豪斯风格的融合生成结果}
+    \label{fig:fusion_bauhaus}
+\end{figure}
+
+\subsection{真实案例对比与可行性验证}
+
+为了验证生成草图的工程可行性，本研究将AI生成的方案与现实世界中的已建项目
+进行了对比分析。
+
+如图 \ref{fig:real_world_comparison1} 所示，生成的公建类草图在体块堆叠
+逻辑、悬挑比例以及开窗模数上，与真实的现代模块化办公楼呈现出惊人的一致性。
+图 \ref{fig:real_world_comparison2} 则展示了住宅类草图与模块化别墅的对
+比，生成的方案准确捕捉了错层退台和独立单元拼接的特征。
+
+这种高度的几何一致性验证了本研究提出的SPEM和MCL机制并非仅仅是在模仿图
+像纹理，而是真正捕捉到了支配模块化建造的底层几何逻辑（Geometric Logic）。
+生成的草图具备转化为BIM模型或深化设计方案的潜力，而不仅仅是艺术构想。
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\textwidth]{Fig1/figure16.png}
+    \caption{生成草图与真实模块化公建案例的几何特征对比}
+    \label{fig:real_world_comparison1}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\textwidth]{Fig1/figure17.png}
+    \caption{生成草图与真实模块化住宅案例的结构逻辑对比}
+    \label{fig:real_world_comparison2}
+\end{figure}
+
+\subsection{模块化一致性损失 (MCL) 的消融实验}
+
+为了量化模块化一致性损失（MCL）在风格融合中的具体贡献，我们设计了消融
+实验（Ablation Study）。图 \ref{fig:ablation_study} 展示了移除不同损失
+函数分量后的生成结果对比：
+
+\begin{itemize}
+    \item \textbf{无内容损失 (c)：} 图像结构完全崩塌，无法保持原始建筑的轮廓。
+    \item \textbf{无风格损失 (d)：} 生成结果退化为对底图的简单重建，未能获得参考图像的纹理特征。
+    \item \textbf{无MCL损失 (e)：} 这是最关键的对比组。在移除MCL后，虽然风格和大致轮廓得以保留，但模块的重复性特征变得模糊，局部线条出现扭曲，单元之间的接口对齐（Alignment）严重缺失。这证实了传统神经风格迁移方法会导致结构失真。
+    \item \textbf{完整模型 (f)：} 引入MCL后，生成的草图在保持风格特征的同时，显著修复了模块边界的直线度和排列的规律性，结构清晰度得到质的提升。
+\end{itemize}
+
+这一结果有力地证明了MCL机制通过施加特征空间的一致性约束，有效解
+决了风格迁移中“结构漂移”的问题，对于模块化建筑设计至关重要。
+
+\begin{figure}[H]
+    \centering
+    \subfloat[content image]{\label{fig:content_image}
+        \includegraphics[width=0.15\textwidth, height=4cm, keepaspectratio]{Fig1/figure18.png}}
+    \hfill
+    \subfloat[style image]{\label{fig:style_image}
+        \includegraphics[width=0.15\textwidth, height=4cm, keepaspectratio]{Fig1/figure19.png}}
+    \hfill
+    \subfloat[no content loss]{\label{fig:no_content_loss}
+        \includegraphics[width=0.15\textwidth, height=4cm, keepaspectratio]{Fig1/figure20.png}}
+    \hfill
+    \subfloat[no style loss]{\label{fig:no_style_loss}
+        \includegraphics[width=0.15\textwidth, height=4cm, keepaspectratio]{Fig1/figure21.png}}
+    \hfill
+    \subfloat[no mcl loss]{\label{fig:no_line_loss}
+        \includegraphics[width=0.15\textwidth, height=4cm, keepaspectratio]{Fig1/figure22.png}}
+    \hfill
+    \subfloat[all loss funcs]{\label{fig:with_all_loss}
+        \includegraphics[width=0.15\textwidth, height=4cm, keepaspectratio]{Fig1/figure23.png}}
+    \caption{不同损失函数配置下的消融实验结果对比：(a) 内容图; (b) 风格图; (c) 无内容损失; (d) 无风格损失; (e) 无MCL损失; (f) 完整模型}
+    \label{fig10}
+\end{figure}
+
+\subsection{交互式设计工具演示}
+
+为了验证本框架在实际设计工作流中的应用价值，本研究开发了一个交
+互式客户端原型。如图 \ref{fig:client_demo} 所示，设计师可以通过该界面选
+择基础的模块化布局，并指定风格参考图（如传统中式塔楼或现代胶囊风格）。
+系统能够实时生成多个风格各异但结构统一的设计变体。这种“人在回
+路”（Human-in-the-loop）的设计模式，将AI从单纯的生成器转变为辅助
+设计师进行方案发散的智能伙伴。
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\textwidth]{Fig1/figure15.png}
+    \caption{交互式模块化建筑设计助手客户端界面及生成示例}
+    \label{fig:client_demo}
+\end{figure}
+
+\section{本章小结}
+
+本章针对模块化建筑设计中面临的“标准化与多样性”矛盾，提出了一种领域特
+定的Modular GAN生成框架。主要工作总结如下：
+
+\begin{enumerate}
+    \item \textbf{模型构建：} 设计了嵌入结构先验编码模块（SPEM）的轻
+	量级生成对抗网络，通过在特征提取阶段强化几何对齐和重复性模式，使
+	得生成的草图天生具备模块化结构逻辑。
+    \item \textbf{风格融合机制：} 提出了一种创新的模块化一致性损
+	失（MCL），解决了传统风格迁移算法破坏建筑结构严谨性的问题，实现了在保持模块化接口对齐的前提下进行多样化的风格探索。
+    \item \textbf{实证验证：} 实验结果表明，该模型在FID指标上优于
+	基准参数配置（87.65 vs 117.21），且在定性评估中展现了对包豪斯、胶
+	囊塔等多种复杂风格的适应性。消融实验进一步证实了MCL在维持结构完整
+	性方面的核心作用。
+\end{enumerate}
+
+本章的研究解决了模块化建筑“外观生成”的问题，为早期的方案构思提供了丰
+富的素材。然而，建筑设计不仅是外观的艺术，更是空间的科学。生成的草
+图虽然具有视觉上的合理性，但其内部的平面功能布局是否符合逻辑、能否
+满足实际的使用需求，仍需进一步探讨。因此，下一章将深入建筑内部，研
+究基于深度强化学习的模块化平面布局优化方法，以实现从“外表皮”到“内空
+间”的智能生成闭环。

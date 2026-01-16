@@ -1,450 +1,517 @@
+\chapter{基于空间邻接感知的模块化建筑平面布局优化研究}
+\label{chap:layout_optimization}
 
-\chapter{常用环境及参考文献设置}
-强烈建议在使用公式、表格、定理环境时进行百度，没必要研究各种用法，只需要知道自己需要什么。因本人的论文所用表格较少，因而对表格不是很熟悉，本章对表格的介绍相应的较少。本章仅介绍本人在论文撰写过程中常用的环境以及参考文献设置。
+\section{引言}
+\label{sec:layout_intro}
 
-\section{图}
-图的导入需要提前准备好图片文件，最好是.png、.eps、.pdf或.jpg文件。另外，如果是从matlab导出图片文件，可使用print函数或手动导出，print函数的使用可参考ICGNC2020plot.m以及PlotToFileColorPDF.m文件等。手动导出（matlab的figure界面的“文件”->“导出设置”设置好大小、分辨率和线宽等然后点击“应用于图窗”）主要用于观察效果，可设置某种样式名称后保存该样式，下次使用时加载，具体可百度“matlab导出高清图片”。需要特别注意的是一定要1:1导入matlab生成的图片，并且图中文字设置好字体字号。否则缩放之后，图片的字号就变了，盲审老师一眼就能看出来字号不对，就很麻烦。这就是为什么要在matlab点击“应用于图窗“进行预览，观测效果后再1:1使用图片。
+\subsection{研究背景：模块化建筑平面设计的范式转变}
 
-使用如下代码放置独立成行的图片，效果如图\ref{one_DFUAV}所示
-\begin{lstlisting}
-\begin{figure}[htbp]
-	% 图片居中（列居中对齐）
-	\centering	
-	% 包含当前路径下的Fig文件夹的图片文件DFUAV_f31.png
-	\includegraphics[scale=1]{Fig/DFUAV_f31.png} 
-	% 添加标签one_DFUAV以及图标题“涵道风扇式无人机”，引用某图时使用\ref{xxx}，其中xxx就是标签，图编号是自动生成的。
-	\caption{\label{one_DFUAV}涵道风扇式无人机} 
-\end{figure}
-\end{lstlisting}
-其中figure为环境名，[htbp]表示将图片设置为浮动体，实际上这在.cls文件已经设置过，因而可以省略。[scale=1]表示安装1:1的比例导入图片，还可以按其他方式导入，需要时可自行百度。
-\begin{figure}[htbp]
-	\centering
-	\includegraphics[scale=1]{Fig/DFUAV_f31.png}
-	\caption{\label{one_DFUAV}涵道风扇式无人机}
-\end{figure}
+模块化建筑（Modular Construction）作为建筑工业化的高级形态，凭借其在提
+升施工效率、优化质量控制以及降低环境足迹方面的显著优势，近年来在全球范围内得
+到了广泛关注与应用 \citep{Lawson2014, zhai2019internet}。与传统的现场浇
+筑模式不同，模块化建筑将大部分建造工序前置于受控的工厂环境中完成，这种制造模
+式的革新对上游的设计流程提出了全新的约束与挑战 \citep{thai2020review}。
 
-使用如下代码划分页面并排放置图\ref{Hawk}、图\ref{GTSpy}
-\begin{lstlisting}
-\begin{figure}[htbp]
-	\centering
-	\begin{minipage}[c]{0.5\textwidth} % minipage将页面划分为0.5\textwidth
-		\centering
-		\includegraphics[width=6cm,height=6cm]{Fig/honeywell_t-hawk.jpg}
-		\caption{\label{Hawk}T-Hawk}
-	\end{minipage}%
-	\begin{minipage}[c]{0.5\textwidth}
-		\centering
-		\includegraphics[width=6cm,height=6cm]{Fig/GTSpy.jpg}
-		\caption{\label{GTSpy}GTSpy}
-	\end{minipage}
-\end{figure}
-\end{lstlisting}
-其中[c]表示行居中对齐。当图片大小不一但又需要1:1导入时，图标题可能行不对齐，因此可以改为如下指令：
-\begin{lstlisting}
-\begin{figure}[htbp]
-	\centering
-	\begin{minipage}[c]{0.5\textwidth}
-		\centering
-		\includegraphics[scale=1]{Fig/honeywell_t-hawk.jpg} %1:1导入
-	\end{minipage}%
-	\begin{minipage}[c]{0.5\textwidth}
-		\centering
-		\includegraphics[scale=1]{Fig/GTSpy.jpg}
-	\end{minipage}\\[1pt]
-	\begin{minipage}[t]{0.5\textwidth}	% 以下为新添加页面划分，[t]表示行顶部对齐
-		\caption{\label{Hawk}T-Hawk}
-	\end{minipage}%
-	\begin{minipage}[t]{0.5\textwidth}
-		\caption{\label{GTSpy}GTSpy}
-	\end{minipage}%
-\end{figure}
-\end{lstlisting}
-\begin{figure}[htbp]
-	\centering
-	\begin{minipage}[c]{0.5\textwidth}
-		\centering
-		\includegraphics[width=6cm,height=6cm]{Fig/honeywell_t-hawk.jpg}
-		\caption{\label{Hawk}T-Hawk}
-	\end{minipage}%
-	\begin{minipage}[c]{0.5\textwidth}
-		\centering
-		\includegraphics[width=6cm,height=6cm]{Fig/GTSpy.jpg}
-		\caption{\label{GTSpy}GTSpy}
-	\end{minipage}
+在传统建筑设计中，设计师通常遵循“形式追随功能”的原则，优先考虑空间的功
+能组织、流线效率及形态美学。然而，在模块化建筑的语境下，设计逻辑发生了根本性
+的转变，要求“功能适应模数”。这意味着建筑平面不仅要满足使用功能，还必须能
+够被精确地离散化（Discretized）为一系列符合运输、吊装及制造限制的标准化体
+积单元（Volumetric Units）。
+
+这种从连续的自由形态平面到离散的模块化组合的转换过程，即“平面
+模块化”（Floor Plan Modularization），本质上是一个复杂的几何分
+割与组合优化问题。如图 \ref{fig:conceptual_framework} 所示，该过程旨
+在将任意给定的建筑平面轮廓自动转化为由标准化模块组成的网格布局。一个高质量
+的模块化布局方案不仅需要最大化地覆盖原始轮廓以保障得房率，更需要严格遵守模
+块的尺寸约束，并维持房间内部的空间完整性（Spatial Integrity）与房间之间
+的功能邻接关系（Spatial Adjacency）。
+
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=1\textwidth,height=0.4\textheight, keepaspectratio]{Fig2/test1.png}
+\caption{本文提出的空间邻接感知模块化过程的概念框架示意图。}
+\label{fig:conceptual_framework}
 \end{figure}
 
+\subsection{现有方法的局限性}
 
-通常一个figure内含有其他小的figure,可以使用一些宏包，但最初本着简单的原则，本模板并没有使用这些子图包。后来应同学们要求在，把子图的功能加上，主要是修改了模板文件（scutthesis.cls文件）的功能包参数。注意，很多网上拿到的代码不一定可以精确的调子图标题字体字号，因为此模板的子图标题字体字号是利用subfig宏包的选项进行设置的（在scutthesis.cls文件的“图表环境”中），而有些教程使用subcaption进行同样的设置，还需进一步验证可行性。另外图的排版方法很多，有些宏包已经被弃用，所以尽量使用本文给出的案例的格式进行排版图片。
+尽管计算机辅助设计（CAD）和建筑信息模型（BIM）技术已广泛普及，但目前
+的模块化平面设计仍主要依赖人工经验或半自动化的规则算法，效率低下且难以保
+证解的质量。现有的自动化布局方法主要存在以下局限性：
 
-常见的子图包有subfigure和subfig。subfigure是比较老的了，这里使用subfig包。两个包在使用的时候用法不同，千万不要混淆了，不然可能会报错。subfig包的命令是\textbackslash{}subfloat。这里给出一种使用subfig包的常用排版，如图\ref{Fig:1}的子图\subref{Fig:1:b}，其中\subref*{Fig:1:a}的试验并不好（这里测试了交叉引用\textbackslash{}subref\{xxx\}和\textbackslash{}subref*\{xxx\}）。必要时也可以排版多行多列的图、调整图之间的间距，具体可百度。
-
-\begin{lstlisting}
-\begin{figure}[!h]
-	\centering
-	\subfloat[不合理的轨迹]{\includegraphics[width=6cm,height=6cm]{Fig/Figure_1.png}%
-		\label{Fig:1:a}}
-	\subfloat[优化的轨迹]{\includegraphics[width=6cm,height=6cm]{Fig/Figure_2.png}
-		\label{Fig:1:b}}
-	\\ % 用 \\ 换行，也可以此处空一行进行换行，只有两个图的话下面就不需要了。
-	\subfloat[不合理的轨迹]{\includegraphics[width=6cm,height=6cm]{Fig/Figure_1.png}%
-		\label{Fig:1:c}}
-	\subfloat[优化的轨迹]{\includegraphics[width=6cm,height=6cm]{Fig/Figure_2.png}%
-		\label{Fig:1:d}}
-	\caption{子图包使用测试}\label{Fig:1}
-\end{figure}
-----------------------------------------------------------
-% 引用某子图时使用\subref{xxx}，其中xxx就是标签Fig:1:a
-子图的引用比较特殊，命令有：\subref{xxx}和\subref*{xxx}
-注：在subfig包使用说明中，\subref{xxx}和\subref*{xxx}分别由参数listofformat和subrefformat控制，
-并由如下定义，根据撰写规范需要定义为：
-\DeclareSubrefFormat{empty}{}
-\DeclareSubrefFormat{simple}{#1#2}
-\DeclareSubrefFormat{parens}{#1 #2)}
-\DeclareSubrefFormat{subsimple}{#2}
-\DeclareSubrefFormat{subparens}{ #2)}
-和
-\DeclareCaptionListOfFormat{empty}{}
-\DeclareCaptionListOfFormat{simple}{#1#2}
-\DeclareCaptionListOfFormat{parens}{#1 #2)}
-\DeclareCaptionListOfFormat{subsimple}{#2}
-\DeclareCaptionListOfFormat{subparens}{ #2)}
-\end{lstlisting}
-\begin{figure}[!h]
-	\centering
-	\subfloat[不合理的轨迹]{\includegraphics[width=6cm,height=6cm]{Fig/Figure_1.png}%
-		\label{Fig:1:a}}
-	\subfloat[优化的轨迹]{\includegraphics[width=6cm,height=6cm]{Fig/Figure_2.png}
- 		\label{Fig:1:b}}
-	\\ % 用 \\ 换行，也可以此处空一行进行换行
-	\subfloat[不合理的轨迹]{\includegraphics[width=6cm,height=6cm]{Fig/Figure_1.png}%
-		\label{Fig:1:c}}
-	\subfloat[优化的轨迹]{\includegraphics[width=6cm,height=6cm]{Fig/Figure_2.png}%
-		\label{Fig:1:d}}
-	\caption{子图包使用测试}\label{Fig:1}
-\end{figure}
-
-\section{表}
-本节仅展示使用常见的三线表
-\begin{lstlisting}
-\begin{table}
-	\caption{\label{TDF_para}涵道模型参数}	%表题在上
-	\centering	% 表居中
-	\small	% 表内字体小一号（即设置成和表题字号一致）
-	\begin{tabular}{cccc}	% cccc表示4列并居中，若列之间需要分隔符则设置为|c|c|c|c|
-		\hline	% \hline表示横线。列之间的元素用&分隔，\tabularnewline表示换行
-		参数符号 & 数值 & 参数符号 & 数值 \tabularnewline 
-		\hline 
-		$I_x$ & $054593$ 		   & $I_y$ & $0.017045         $ \tabularnewline
-		$l_1$ & $0.0808\,\text{m}$ & $l_2$ & $0.175\,\text{m}  $ \tabularnewline 
-		$l_4$ & $0.2415\,\text{m}$ & $l_5$ & $0.1085\,\text{m} $ \tabularnewline
-		\hline 
-	\end{tabular}
-\end{table}
-\end{lstlisting}
-\begin{table}
-	\caption{\label{TDF_para}涵道模型参数}
-	\centering
-	\small 
-	\begin{tabular}{cccc}
-		\hline 
-		参数符号 & 数值                & 参数符号 & 数值                 \tabularnewline
-		\hline 
-		$I_x$   & $054593$ 		     & $I_y$   & $0.017045         $ \tabularnewline
-		$l_1$   & $0.0808\,\text{m}$ & $l_2$   & $0.175\,\text{m}  $ \tabularnewline 
-		$l_4$   & $0.2415\,\text{m}$ & $l_5$   & $0.1085\,\text{m} $ \tabularnewline
-		\hline 
-	\end{tabular}
-\end{table}
-
-\section{公式}
-除了前面讲行内公式，常用的还有行间公式。公式中的数学符号可自行百度，本章仅介绍常用的几种公式环境。
-
-单独成行的行间公式在 \LaTeX{} 里由equation 环境包裹。equation 环境为公式自动生成一个编号，这个编号可以用\textbackslash{}label 和\textbackslash{}ref 生成交叉引用，amsmath 宏包的\textbackslash{}eqref 可为引用自动加上圆括号；如式\eqref{eq_1}所示。
-\begin{lstlisting}
-\begin{equation}
-	a+b=c	\label{eq_1}
-\end{equation}
-\end{lstlisting}
-\begin{equation}
-	a+b=c	\label{eq_1}
-\end{equation}
-若不需要编号则加星号，改为
-\begin{lstlisting}
-\begin{equation*}
-	a+b=c
-\end{equation*}
-\end{lstlisting}
-其他环境类似。当使用 \texttt\$ 开启行内公式输入，或是使用{equation} 环境时，\LaTeX\ 就进入了数学模式。
-数学模式相比于文本模式有以下特点：
 \begin{enumerate}
-	\item 数学模式中输入的空格被忽略。数学符号的间距默认由符号的性质（关系符号、运算符等）决定。
-	需要人为引入间距时，使用 \textbackslash{}{quad} 和 \textbackslash{}{qquad} 等命令。
-	\item {不允许有空行（分段）}。行间公式中也无法用 $ \verb|\\|$命令手动换行。排版多行公式需要用到 其他各种环境。
-	\item 所有的字母被当作数学公式中的变量处理，字母间距与文本模式不一致，也无法生成单词之间的空格。
-	如果想在数学公式中输入正体的文本，简单情况下可用 \textbackslash{}{mathrm} 命令。
-	或者用 {amsmath} 提供的 \textbackslash{}{text} 命令（仅适合在公式中穿插少量文字。如果你的情况正好相反，需要在许多文字中穿插使用公式，则应该像正常的行内公式那样用，而不是滥用 \textbackslash{}{text} 命令）。
-\end{enumerate}	
+    \item \textbf{缺乏对空间拓扑关系的考量：} 传统的几何分割算
+	法（如矩形剖分、网格平铺）通常将平面视为纯粹的几何图形进
+	行切割 \citep{Wu2019}。这种“几何优先”的策略往往忽视了建筑功
+	能的内在逻辑，容易切断房间之间的必要连接（例如将一个完整的起居室
+	分割为互不连通的两个模块），或者产生大量无法使用的狭长碎片空间，导致
+	生成的布局在建筑功能上不可行。
+    
+    \item \textbf{标准化程度与灵活性的矛盾：} 现有的启发式优化
+	算法（如遗传算法、模拟退火）在处理规则矩形轮廓时表现尚可，但
+	在面对现实中常见的非凸、不规则建筑边界时，往往难以在“模块标准
+	化”（减少模块类型以降低成本）和“轮廓匹配度”（提高覆盖率）之间
+	找到最佳平衡点，容易陷入局部最优解 \citep{Li2020_opt}。
+    
+    \item \textbf{计算效率瓶颈：} 许多基于搜索的生成方法随着平面复
+	杂度的增加，计算时间呈指数级增长，难以满足早期设计阶段快速迭代、
+	实时反馈的需求。
+\end{enumerate}
 
-实际上更常用的的是多行公式，不需要对齐的公式组可以使用gather环境，需要对齐的公式组用align 环境。
-长公式内可用$ \verb|\\|$ 换行。
+\subsection{本章研究目标与主要贡献}
 
-如果需要罗列一系列公式，并令其按照等号对齐，可用align 环境，它将公式用\& 隔为两部分并对齐。分隔符通常放在等号左边：
-\begin{lstlisting}
-\begin{align}
-	a & = b + c \\
-	& = d + e
-\end{align}
-\end{lstlisting}
-\begin{align}
-a & = b + c \\
-& = d + e
-\end{align}
-align 环境会给每行公式都编号。
+针对上述挑战，本章提出了一种基于深度强化学习（Deep Reinforc
+ement Learning, DRL）的端到端模块化布局生成框架。该框架不依赖于
+预定义的分割模板，而是通过学习“如何组装”的策略，从底层的原子网格出
+发，逐步构建出最优的模块化布局。
 
-如果不需要按等号对齐，只需罗列数个公式，可用gather环境：
-\begin{lstlisting}
-\begin{gather}
-	a  = b + c \notag \\
-	f = d + e 
-\end{gather}
-\end{lstlisting}
-\begin{gather}
-	a  = b + c \notag  \\
-	f = d + e 
-\end{gather}
-gather 环境同样会给每行公式都编号，如果某行不需要编号可在行末用\textbackslash{}notag 仅去掉某行的编号。
+本章的主要研究贡献总结如下：
 
-align 和gather 有对应的不带编号的版本align* 和gather*。
+\begin{itemize}
+    \item \textbf{提出基于空间邻接感知的状
+	态表示（Adjacency-Aware State Representation）：} 创新性地构建了
+	包含几何特征与拓扑关系的多模态状态空间。通过引入邻接
+	图（Adjacency Graph）作为状态的一部分，智能体在决
+	策过程中能够显式地感知当前网格与周边区域的连通性，从而有
+	效防止功能空间的割裂。
 
-另一个常见的需求是将多个公式组在一起公用一个编号，编号位于公式的居中位置。为此，
-amsmath 宏包提供了诸如aligned、gathered 等环境，与equation 环境套用。以-ed 结尾的
-环境用法与前一节不以-ed 结尾的环境用法一一对应。我们仅以aligned 举例：
-\begin{lstlisting}
+    \item \textbf{设计基于“合并”策略的动作空
+	间（Merge-based Action Space）：} 不同于传统的“自顶向下”
+	分割策略，本研究采用“自底向上”的合并机制。智能体从细粒度的正交
+	网格开始，通过学习最优的合并动作序列，将相邻网格聚合成符合尺寸
+	约束的标准化大模块。这种机制天然地保证了模块的几何规整性。
+    
+    \item \textbf{构建多目标奖励函数体
+	系（Multi-objective Reward Function）：} 综合考虑
+	了覆盖率（Coverage）、模块数量（Module Count）、类型
+	标准化（Standardization）以及边界平滑度（Boundary Smoothness）等多个
+	优化目标。通过精心设计的奖励信号，引导智能体在复杂的约束空间中
+	搜索出兼顾制造效率与建筑性能的全局最优解。
+\end{itemize}
+
+通过本章提出的方法，我们致力于解决“标准化制造”与“多样化设计”之间
+的矛盾，为模块化建筑的智能设计提供一种新的技术路径。
+
+\section{模块化布局生成的问题定义与建模}
+\label{sec:problem_formulation}
+
+在深入探讨具体的算法实现之前，本节首先对模块化平面布局生成问题进行严
+格的数学定义。我们将该问题建模为一个受多重几何与拓扑约束限制的组合优化
+问题（Combinatorial Optimization Problem），旨在寻找一组最优的模块
+配置，使其在满足制造与功能要求的同时，最大化地匹配给定的建筑轮廓。
+
+\subsection{符号定义与输入输出}
+
+给定一个任意形状的建筑平面轮廓 $\mathcal{P}$，该轮廓通常由一组有
+序的顶点 $V = \{v_1, v_2, \dots, v_k\}$ 定义的多边形边界
+表示。我们的目标是生成一个模块集合 $\mathcal{M} = \{m_1, m_2, \dots, m_n\}$，其中
+每一个 $m_i$ 代表一个矩形的模块化单元。
+
+每个模块 $m_i$ 可以由其几何属性唯一确定，记为五元组：
 \begin{equation}
-	\begin{aligned}
-		a &= b + c \\
-		d &= e + f + g \\
-		h + i &= j + k \\
-		l + m &= n
-	\end{aligned}
+    m_i = (x_i, y_i, w_i, h_i, \theta_i)
 \end{equation}
-\end{lstlisting}
+其中，$(x_i, y_i)$ 表示模块的中心坐标，$w_i$ 和 $h_i$ 分别
+表示模块的宽度和长度，$\theta_i \in \{0, 90^\circ\}$ 表示
+模块的旋转角度（通常限制为正交旋转以适应标准化制造）。
+
+\subsection{约束条件建模}
+
+为了保证生成的布局方案在工程上的可行性，模块集合 $\mathcal{M}$ 必须
+满足以下三类核心约束：
+
+\subsubsection{几何覆盖约束 (Geometric Constraint)}
+生成的模块必须严格位于给定的建筑边界内部，且不能超出轮廓范围。这一约
+束确保了设计方案不违反用地的红线限制。形式化表示为：
 \begin{equation}
-	\begin{aligned}
-		a &= b + c \\
-		d &= e + f + g \\
-		h + i &= j + k \\
-		l + m &= n
-	\end{aligned}
+    \forall m_i \in \mathcal{M}, \quad \text{Area}(m_i \cap \mathcal{P}) = \text{Area}(m_i)
+    \label{eq:boundary_constraint}
 \end{equation}
-split 环境和aligned 环境用法类似，也用于和equation 环境套用，区别是split 只能
-将每行的一个公式分两栏，aligned 允许每行多个公式多栏。
+即模块 $m_i$ 与轮廓 $\mathcal{P}$ 的交集面积必须等于模块自身的面积。
 
-分段函数通常用amsmath 宏包提供的cases 环境，可参考文献\parencite{_c}
+\subsubsection{非重叠约束 (Non-overlapping Constraint)}
+在物理空间中，任意两个模块之间不能发生体积上的冲突。即对于任意
+两个不同的模块 $m_i$ 和 $m_j$，它们的空间交集必须为空：
+\begin{equation}
+    \forall i \neq j, \quad m_i \cap m_j = \emptyset
+    \label{eq:overlap_constraint}
+\end{equation}
+这一约束保证了布局的物理合法性，避免了结构冲突。
 
-amsmath 宏包还直接提供了多种排版矩阵的环境，包括不带定界符的matrix，以及带各种定界符的矩阵pmatrix、bmatrix、Bmatrix、vmatrix、Vmatrix。
-其中中括号版的bmatrix最常用。这些矩阵环境需要在公式中使用，比如 gather 环境。
-\begin{lstlisting}
-\begin{gather}
-	\boldsymbol{A}= \begin{bmatrix}
-		x_{11} & x_{12} & \ldots & x_{1n} \\
-		x_{21} & x_{22} & \ldots & x_{2n} \\
-		\vdots & \vdots & \ddots & \vdots \\
-		x_{n1} & x_{n2} & \ldots & x_{nn}
-	\end{bmatrix}
-\end{gather}
-\end{lstlisting}
-\begin{gather}
-\boldsymbol{A}= \begin{bmatrix}
-	x_{11} & x_{12} & \ldots & x_{1n} \\
-	x_{21} & x_{22} & \ldots & x_{2n} \\
-	\vdots & \vdots & \ddots & \vdots \\
-	x_{n1} & x_{n2} & \ldots & x_{nn}
-   \end{bmatrix}
-\end{gather}	
-其中矩阵/向量加粗使用\textbackslash{}boldsymbol\{\}命令，bm宏包的\textbackslash{}bm\{\}命令和unicode-math包有兼容性问题，若使用unicode-math包，就不能使用bm包加粗，unicode-math的一些加粗命令比较特别（具体在math\_font文件夹的测试文件对比差异）。若不使用unicode-math，boldsymbol命令也没法加粗，则再考虑借助bm包。简而言之，公式加粗使用\textbackslash{}boldsymbol\{\}命令。另外还可以使用array环境排版矩阵，类似tabular环境，用$ \verb|\\|$ 和\& 用来分隔行和列，这里不再赘述。	
-\begin{lstlisting}
-\begin{array }[外部对齐tcb]{列对齐lcr}
-	行列内容
-\end{array}
-\end{lstlisting}
+\subsubsection{模数与尺寸约束 (Dimensional Constraint)}
+模块化建筑的核心优势在于标准化。因此，模块的尺寸不能是任意
+连续值，而必须属于一个预定义的标准化尺寸集合 $\mathcal{S}$。该集合
+通常由运输限制（如道路限宽、集装箱尺寸）和生产线模数决定：
+\begin{equation}
+    (w_i, h_i) \in \mathcal{S} \quad \text{or} \quad (h_i, w_i) \in \mathcal{S}
+    \label{eq:dimension_constraint}
+\end{equation}
+例如，$\mathcal{S}$ 可能包含 $\{3m \times 6m, 3m \times 9m, \dots\}$ 等标准规格
+。违反此约束将导致定制成本激增，丧失模块化的经济性。
 
-另外注意排版分式时，有两种方法：\textbackslash{}frac或者\textbackslash{}dfrac，效果分别为$ \frac{1}{2} $和$ \dfrac{1}{2} $。以上介绍的数学环境中，空格可参考文献\parencite{_c}，例如常用\textbackslash{}quad。
+\subsection{优化目标函数}
 
-需要局部更改字号时，可以使用tutorial文件夹lshort-zh-cn.pdf的5.1节进行更改，如加\textbackslash{}small使得字号小一号。
-\section{定理}
-在scutthesis.cls文件的最后，已经用\textbackslash{}newtheorem命令定义了几种定理环境，包括：定义、假设、定理、结论、引理、公理、推论、性质等等，统称定理环境，关于\textbackslash{}newtheorem的用法，可参考\cite{_g,_c}或自行百度。要下面提供几个例子，在横线之间的深色区域是代码，效果在相应下方表示：
-\begin{lstlisting}
-\begin{assumption}
-	加权矩阵${{\boldsymbol{W}}_{1}}$和 ${{\boldsymbol{W}}_{2}}$ 是对称矩阵，且$ {{\boldsymbol{W}}_{2}}$非奇异。	\label{assum_dca1}
-\end{assumption}
-\end{lstlisting}
-\begin{assumption}
-	加权矩阵${{\boldsymbol{W}}_{1}}$和 ${{\boldsymbol{W}}_{2}}$ 是对称矩阵，且$ {{\boldsymbol{W}}_{2}}$非奇异。	\label{assum_dca1}
-\end{assumption}
+在满足上述硬性约束的前提下，我们旨在寻找一个“最优”的布局方案。这种最优性由以
+下三个相互竞争的目标共同定义：
 
-定理用法和假设类似：
-\begin{lstlisting}
-\begin{theorem}
-	如果假设\ref{assum_dca1}成立，$\boldsymbol{F}$满足式\eqref{eq_F}的定义，且${{\boldsymbol{W}}_{1}}$非奇异，则有$0\le e \left( \boldsymbol{F} \right) < 1$，其中$e \left( \boldsymbol{F} \right)$是 $\boldsymbol{F}$的特征值。	\label{the_dca2}
-\end{theorem}
-\end{lstlisting}
-\begin{theorem}
-	如果假设\ref{assum_dca1}成立，$\boldsymbol{F}$满足上式的定义，且${{\boldsymbol{W}}_{1}}$非奇异，则有$0\le e \left( \boldsymbol{F} \right) < 1$，其中$e \left( \boldsymbol{F} \right)$是 $\boldsymbol{F}$的特征值。	\label{the_dca2}
-\end{theorem}
-\begin{remark}
-	定理环境的编号可自定义，但通常不需要再进行设置，因为模板文件scutthesis.cls文件已经定义好。
-\end{remark}
+\begin{enumerate}
+    \item \textbf{最大化覆盖率 (Coverage Maximization)：} 为了提高土地利用率
+	和得房率，模块集合 $\mathcal{M}$ 的总面积应尽可能接近建筑
+	轮廓 $\mathcal{P}$ 的面积。
+    \begin{equation}
+        \max J_{\text{cov}} = \frac{\sum_{i=1}^{n} \text{Area}(m_i)}{\text{Area}(\mathcal{P})}
+    \end{equation}
+    
+    \item \textbf{最小化模块数量 (Module Count Minimization)：} 在覆盖率相
+	同的情况下，使用更少的大尺寸模块通常优于使用大量小尺寸模块，因为这能减少现
+	场吊装次数和拼缝处理工作量，从而降低施工成本。
+    \begin{equation}
+        \min J_{\text{num}} = n = |\mathcal{M}|
+    \end{equation}
+    
+    \item \textbf{最大化标准化程度 (Standardization Maximization)：} 为了发挥
+	规模效应，应尽可能减少模块的类型数量（Types），即复用同一种规格的模块。
+    \begin{equation}
+        \min J_{\text{type}} = |\text{Unique}(\{(w_i, h_i) | m_i \in \mathcal{M}\})|
+    \end{equation}
+\end{enumerate}
 
----------------------------------------------------------
+综上所述，模块化平面布局生成问题被定义为一个多目标优化问题。由于建筑
+轮廓的复杂性（非凸、不规则边界）以及离散的组合特性，该问题属于典
+型的NP-难（NP-hard）问题，传统的精确求解算法难以在多项式时间内找
+到全局最优解。这正是本章引入深度强化学习方法的根本动因。
 
-2022年5月更新：
+\section{基于正交网格分解的初始化策略}
+\label{sec:initialization}
 
-根据最新的博士论文送审结果，定理等环境统一把原来的斜体改成正体。在此引用一下参考文献\cite{_g}的内容：
+为了将连续的建筑平面转化为计算机可处理的离散形式，并为后续的强化学习算法提供合法的状态空间，本研究提出了一种基于正交网格分解（Orthogonal Grid Decomposition, OGD）的初始化策略。该策略旨在将任意形状的建筑轮廓离散化为一系列基础的“原子单元”，作为模块化组装的最小颗粒度。
 
-amsthm 提供了 \textbackslash{}theoremstyle 命令支持定理格式的切换，在用 \textbackslash{}newtheorem 命令定义定 理环境之前使用。amsthm 预定义了三种格式用于 \textbackslash{}theoremstyle:plain 和 LATEX 原始的格式 一致；definition 使用粗体标签、正体内容；remark 使用斜体标签、正体内容。
+\subsection{轮廓离散化处理}
 
-以上部分在scutthesis.cls文件最后一部分设置。
+建筑平面轮廓 $\mathcal{P}$ 通常由一系列连续的二维坐标点定义。直接在连续空间中进行模块排布不仅计算复杂度极高，而且难以保证模块间的无缝拼接。因此，首先需要对设计空间进行离散化处理。
 
----------------------------------------------------------
+我们将建筑平面的包围盒（Bounding Box）划分为尺寸为 $\delta \times \delta$ 的正交网格系统。网格尺寸 $\delta$ 的设定至关重要，它通常取所有标准化模块尺寸的最大公约数（Greatest Common Divisor, GCD），以确保任何标准模块都可以由整数个网格单元组合而成。例如，若标准模块尺寸集合为 $\{3m \times 6m, 3m \times 9m\}$，则 $\delta$ 可设为 $3m$。
 
-amsthm 还提供了一个 proof 环境用于排版定理的证明过程。proof 环境末尾自动加上一个证毕符号:
-\begin{proof}
-	显然有
-	\begin{equation*}
-	E=mc^2
-	\end{equation*}
-	证毕
-\end{proof}
+对于网格系统中的每一个单元 $g_{ij}$，我们根据其中心点 $c_{ij}$ 与建筑轮廓 $\mathcal{P}$ 的位置关系定义其状态 $S_{ij}$：
+\begin{equation}
+    S_{ij} = 
+    \begin{cases} 
+    1, & \text{if } c_{ij} \in \text{Interior}(\mathcal{P}) \\
+    0, & \text{otherwise}
+    \end{cases}
+\end{equation}
+其中，$S_{ij}=1$ 表示该网格为有效占据网格（Occupied Grid），$S_{ij}=0$ 表示无效网格。通过这一步骤，不规则的建筑轮廓被映射为一个二值化的占据矩阵（Occupancy Matrix）。
 
-proof的大更多用法见参考文献\cite{_g}。scutthesis.cls文件的最后，跟所有定理环境一样，只是把英文”Proof“改成中文“证明”。
+\subsection{初始原子网格生成}
 
-\section{参考文献}
+在完成离散化后，所有标记为 $1$ 的有效网格构成了初始的“原
+子网格集合”（Atomic Grid Set），记为 $\mathcal{A} = 
+\{a_1, a_2, \dots, a_k\}$。每一个原子网格 $a_k$ 都被视为一
+个独立的、最小尺寸的模块单元。
 
-再次强调，使用其他参考文献管理软件的用户以及不使用任何软件的“裸奔”的用户不需要关注任何关于zetero的东西。
-\begin{lstlisting}
-	关于参考文献这块，很多同学有疑问。只有记住一点：不管用什么参考文献管理工具，最终目的是生成一个bib文件，bib文件里是特定格式的文献信息。bib文件当作文本打开，里面就是文献的元数据。
-\end{lstlisting}
+如图 \ref{fig:grid_decomposition} 所示，OGD 过程有效地解决
+了非凸多边形（Non-convex Polygons）的填充难题。对于边界处的复
+杂几何特征，算法采取“保守近似”策略，即仅保留中心点位于轮廓内
+部的网格，从而保证生成的模块严格位于建筑红线范围内。
 
-通常学位论文参考文献是基于BibTeX进行的，本模板使用的是BibLaTeX，或者叫Biber。关于这部分知识可参考文献\parencite{_c,_g}的第六章，6.1节参考文献和BIBTEX工具。所以使用TeXstudio或者vscode的时候需要注意调整正确的参数进行编译。
+这一初始化过程为后续的深度强化学习任务构建了基础环境。此时，整个
+平面布局被视为一个由 $k$ 个原子网格组成的初始状态，智能体的任务
+即是通过一系列的决策动作，将这些细碎的原子网格逐步合并
+为符合制造约束的大尺寸标准化模块。
 
-引用前手动加空格，如：
-
-引用前没有加空格\parencite{_c,_g}的第六章，引用后面有空格。
-
-引用前手动加空格 \parencite{_c,_g}的第六章，引用后面有空格。
-
-手写方括号 [6]。引用后面没空格。
-
-生成方括号 \parencite{_k}。引用后面没空格。
-
-
-参考文献引用和著录是基于ZOTERO这个软件进行的。视频教程见\parencite{_k}。此外，为了符合毕业论文撰写规范，需设置参数。按照视频教程安装完必要的插件（如Better BibTeX）后，在编辑->首选项进行设置。图\ref{op1}到图\ref{op11}所示的是我的zotero软件设置。其中最重要的是\ref{op10}的设置要排除的选项，多余的显示会让审稿人反感，按照论文撰写规范进行即可。在毕业论文撰写时，在编辑->首选项->Better BibLTeX->Fields中，Fields to omit from export填month,abstract,note,extra,file,keywords,type,url,doi，就是在参考文献著录中排除这些多余的项，避免过于复杂。而在写本模板使用说明时，没有排除url，因为很多参考资料是网页。
-
-\begin{lstlisting}
-    使用zotero，有时候科学上网很重要。
-\end{lstlisting}
-
-在zotero软件点击文件->导出文献库，如图\ref{output}所示，再在导出对话框图\ref{output_format}选择导出格式为Better BibLaTeX，同时勾选Keep updated选项保持自动更新，再点击ok，在弹出的对话框图\ref{output_name}确定保存路径和文件名，例如我的是MyLibrary.bib，这也是我整个读书生涯的文献库bib文件。如果写小论文的话通常导出格式是BibTeX或者Better BibTeX（这里按照期刊的要求来即可，文献管理软件的好处就是快速自动生成一个文件库）。关于BibTeX和BibLaTeX的区别这里不做展开。
-
-得到文献库后，在scutthesis.tex文件第九行使用\textbackslash{}addbibresource命令，添加文献库。引用某文献时秩序在zotero选中某文献条目，然后按Ctrl+Shift+C，复制引用关键字（Citation Key）到剪切板（快捷键可自定义）。然后在tex文件编辑界面直接粘贴，默认的时上标形式，若需要非上标形式，可以改为\textbackslash{}parencite\{xxx\}，其中xxx是Citation Key。这里的操作和认为设置的首选项参数有关，需要在编辑->首选项->导出界面的默认格式一栏选中相应的项，同时在编辑->首选项->高级->快捷键设置为默认值。
-
----------------------------------------------------------------------------------
-
-2020年12月2日测试：
-下载最新zotero，从知网和谷歌捕获文献（刚打开网页最好稍等一会再点击插件，谷歌可能需要现人机验证），对文献\parencite{Renduchintala_2019}、\parencite{milz2020design}进行引用。
-
----------------------------------------------------------------------------------
-
----------------------------------------------------------------------------------
-
-2021年9月14日测试：
-使用endnote的用户也可以利用导出的bib文件生成参考文献著录信息，导出选项是bibTeX，貌似没有更多导出设置选项。导出设置没有zotero那么灵活丰富，得到bib文件后要引用某论文需要自行查找标签（label，也有软件叫引用关键字Citation Key）\{xxx\}然后手打\textbackslash{}cite\{xxx\}。欢迎熟悉endnote的同学来信告诉我更好的办法。
-
----------------------------------------------------------------------------------
-
-2023年3月8日测试：参考文献管理软件经常更新，但还是那句话，无论什么工具，最终得到bib文件即可，在期刊的文章页或者谷歌学术搜索页，只需要复制/下载bibtex的内容。得到这些元数据后甚至自己往bib文件里加都可以。
-
----------------------------------------------------------------------------------
-
-2023年11月测试。论文写完记得断掉bib文件自动更新，在zotero的插件Better BibTeX自动导出设置里删除不希望再继续同步到项。否则更改软件中的文献后，论文的bib文件也同步更改，但有时候这不是想要的。
-\begin{lstlisting}
-    另外有同学反映，换了电脑后重新导出的bib文件Citation Key值不同，记得设置好Better BibTeX之后，在著录条目界面全选著录（或仅选想更新的著录）然后右键选Better BibTeX更新refresh一下。然后在Automatic export选项点击Export now立即更新bib文件（按理说勾选了自动更新选项他会自动更新，但为了确保万无一失还是点一下）。
-\end{lstlisting}
-\begin{figure}
-	\centering
-	\includegraphics[scale=0.8]{Fig/zotero1.png}
-	\caption{\label{op1}常规}
-\end{figure}
-\begin{figure}
-	\centering
-	\includegraphics[scale=0.8]{Fig/zotero2.png}
-	\caption{\label{op2}同步1}
-\end{figure}
-\begin{figure}
-	\centering
-	\includegraphics[scale=0.8]{Fig/zotero3.png}
-	\caption{\label{op3}同步2}
-\end{figure}
-\begin{figure}
-	\centering
-	\includegraphics[scale=0.8]{Fig/zotero4.png}
-	\caption{\label{op4}搜索}
-\end{figure}
-\begin{figure}
-	\centering
-	\includegraphics[scale=0.8]{Fig/zotero5.png}
-	\caption{\label{op5}导出}
-\end{figure}
-\begin{figure}
-	\centering
-	\includegraphics[scale=0.8]{Fig/zotero6.png}
-	\caption{\label{op6}引用}
-\end{figure}
-\begin{figure}
-	\centering
-	\includegraphics[scale=0.8]{Fig/zotero7.png}
-	\caption{\label{op7}高级1}
-\end{figure}
-\begin{figure}
-	\centering
-	\includegraphics[scale=0.8]{Fig/zotero8.png}
-	\caption{\label{op8}高级2}
-\end{figure}
-\begin{figure}
-	\centering
-	\includegraphics[scale=0.8]{Fig/zotero9.png}
-	\caption{\label{op9}Better BibTeX1}
-\end{figure}
-\begin{figure}
-	\centering
-	\includegraphics[scale=0.8]{Fig/zotero10.png}
-	\caption{\label{op10}Better BibTeX2}
-\end{figure}
-\begin{figure}
-	\centering
-	\includegraphics[scale=0.8]{Fig/zotero11.png}
-	\caption{\label{op11}Better BibTeX3}
-\end{figure}
-
+% 请确认您 tex 文件中 Figure 2 的实际文件名，此处暂用 figs/grid_decomposition.pdf
 \begin{figure}[htbp]
-	\centering
-	\includegraphics[scale=0.42]{Fig/zotero12.png}
-	\caption{\label{output}导出文献库}
+    \centering
+    \includegraphics[width=1\textwidth]{figs/grid_decomposition.pdf}
+    \caption{正交网格分解（OGD）过程示意图：(a) 原始建筑平面轮廓；(b) 网格离散化处理；(c) 生成的初始原子网格集合。该过程将连续的几何约束转化为离散的矩阵表示。}
+    \label{fig:grid_decomposition}
 \end{figure}
 
+\section{空间邻接感知的深度强化学习算法}
+\label{sec:drl_algorithm}
+
+基于上一节生成的初始原子网格，我们将模块化平面布局生成问题建
+模为一个马尔可夫决策过程（Markov Decision Process, MDP）。本
+节详细阐述该MDP的关键要素，包括状态空间、动作空间以及奖励函数的
+设计，重点介绍如何通过引入拓扑信息来增强智能体对空间结构的感知能力。
+
+\subsection{状态空间设计}
+\label{subsec:state_space}
+
+为了使智能体能够全面理解当前的布局状态，我们设计了一种包含
+几何信息与拓扑信息的多模态状态表示 $S_t = (\mathcal{I}_t, 
+\mathcal{G}_t)$。
+
+\begin{enumerate}
+    \item \textbf{几何状态 ($\mathcal{I}_t$)：} 这是一个二维
+	矩阵，直观地表示了当前建筑平面的几何占据情况。矩阵中的每个
+	元素对应一个原子网格，其值标识该网格所属的模块编号。通过卷
+	积神经网络（CNN）处理这一状态，智能体可以提取出模块的形状、
+	尺寸以及位置特征。
+    \item \textbf{拓扑状态 ($\mathcal{G}_t$)：} 这是一个无向
+	图，用于显式地编码模块之间的邻接关系。图中的节点代表当前的
+	模块，边则代表模块之间的物理邻接。
+\end{enumerate}
+
+如图 \ref{fig:state_space} 所示，这种双重状态表示不仅让智能
+体“看到”了模块在哪里（几何），还让它“理解”了模块与谁相连（拓扑）。
+这对维持房间功能的连续性至关重要，防止了不合理的分割切断空间联系。
+
+% 请将此处的文件名 'figs/state_space.png' 替换为您 tex 文件中 Figure 3 的实际文件名
 \begin{figure}[htbp]
-	\centering
-	\includegraphics[scale=0.42]{Fig/zotero13.png}
-	\caption{\label{output_format}导出格式}
+    \centering
+    \includegraphics[width=1\textwidth]{figs/state_space.png} 
+    \caption{空间邻接感知的多模态状态表示示意图。(a) 几何状态：表示模块分布的二维矩阵；(b) 拓扑状态：表示模块邻接关系的对偶图。两者共同构成了强化学习的输入状态。}
+    \label{fig:state_space}
 \end{figure}
 
+\subsection{动作空间与合并机制}
+\label{subsec:action_space}
+
+与传统的“自顶向下”切割方法不同，本研究采用“自底向上”的合并
+策略。动作空间 $\mathcal{A}$ 定义为所有合法的“模块合并”操
+作的集合。
+
+在时间步 $t$，智能体选择一个动作 $a_t$，即选择两个相邻的
+模块 $m_i$ 和 $m_j$ 进行合并。为了保证生成的模块始终为矩形
+（符合制造标准），合并操作必须满足**矩形约束（Rectang
+ularity Constraint）**：即 $m_i$ 和 $m_j$ 合并后的形状必
+须仍为一个矩形。
+
+如图 \ref{fig:action_merge} 所示，若两个模块共享一条公
+共边且合并后不形成凹多边形，则该合并动作是合法的。通过不断执
+行合并动作，原本细碎的原子网格逐渐聚合成大尺寸的标准化模块，
+直到没有合法的合并动作或达到终止条件为止。
+
+% 请将此处的文件名 'figs/action_merge.png' 替换为您 tex 文件中 Figure 4 的实际文件名
 \begin{figure}[htbp]
-	\centering
-	\includegraphics[scale=0.42]{Fig/zotero14.png}
-	\caption{\label{output_name}导出文件名}
+    \centering
+    \includegraphics[width=0.8\textwidth]{figs/action_merge.png}
+    \caption{基于合并策略的动作空间示意图。智能体选择相邻的两个单元进行合并，前提是合并后的新单元必须保持矩形特征，以满足模块化制造的几何约束。}
+    \label{fig:action_merge}
 \end{figure}
 
+\subsection{奖励函数设计}
+\label{subsec:reward_function}
+
+为了引导智能体搜索出既满足几何覆盖又具备高度标准化的布局，
+我们设计了一个多目标奖励函数 $R_t$。该函数由三个核心部分组成：
+
+\begin{equation}
+    R_t = w_1 \cdot r_{\text{cov}} + w_2 \cdot r_{\text{num}} + w_3 \cdot r_{\text{std}}
+    \label{eq:reward_function}
+\end{equation}
+
+\begin{itemize}
+    \item \textbf{覆盖奖励 ($r_{\text{cov}}$)：} 鼓励生成的
+	模块尽可能多地覆盖原始建筑轮廓。
+    \item \textbf{数量惩罚 ($r_{\text{num}}$)：} 旨在最小化
+	模块总数。每执行一次有效的合并操作，模块数量减少，智能体获
+	得正向奖励。这有助于生成大尺寸的模块，减少现场吊装次数。
+    \item \textbf{标准化奖励 ($r_{\text{std}}$)：} 鼓励生成
+	标准尺寸的模块。若合并后的模块尺寸 $(w, h)$ 属于预设
+	的标准化模数集合 $\mathcal{S}$，则给予额外的奖励
+	。这一项直接优化了模块的可制造性。
+\end{itemize}
+
+其中，$w_1, w_2, w_3$ 为权重系数，用于平衡各优化目标的
+重要性。通过这一奖励机制，智能体能够在复杂的决策空间中，
+自动权衡覆盖率、施工效率与制造成本，最终收敛至全局最优的
+模块化布局方案。
+
+
+\section{空间邻接感知的深度强化学习算法}
+\label{sec:drl_algorithm}
+
+基于前一节生成的初始原子网格环境，本节将模块化平面布
+局的生成过程建模为一个马尔可夫决策过程（MDP）。我们提出
+了一种空间邻接感知的深度强化学习框架，通过智能体与环境的交互
+，逐步学习如何将细碎的网格合并为最优的模块化布局。
+
+\subsection{状态空间设计}
+\label{subsec:state_space}
+
+为了使智能体能够感知当前的布局几何特征，状态空间 $S$ 被定义
+为一个二维的特征矩阵（Feature Map）。设初始的正交网格系统尺
+寸为 $H \times W$，则状态 $s_t$ 可以表示为
+一个 $H \times W$ 的矩阵，矩阵中的每一个元素对应一个
+原子网格。
+
+元素的值用于标识该网格当前所属的模块索引（Module Index）。如
+图 \ref{fig:state_representation} 所示，具有相同索
+引值的相邻网格构成了一个完整的模块。这种基于网格的状态表示法能
+够完整地保留平面轮廓的几何信息以及模块之间的相对位置关系，为卷
+积神经网络提取空间特征提供了直接的输入形式。
+
+% 请将此处的文件名替换为您 tex 文件中 Figure 3 对应的实际文件名
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figs/state_representation.png} 
+    \caption{基于网格的状态空间表示示意图。矩阵中的数值代表模块索引，相同数值的连通区域构成一个独立的模块。}
+    \label{fig:state_representation}
+\end{figure}
+
+\subsection{动作空间与合并机制}
+\label{subsec:action_space}
+
+传统的布局生成方法多采用“自顶向下”的分割策略，而本研究创
+新性地采用“自底向上”的**合并（Merge）**策略。动作
+空间 $\mathcal{A}$ 由所有合法的合并操作组成。
+
+在任意时间步 $t$，智能体的一个动作 $a_t$ 定义为：选择两
+个**空间相邻**且**合并后仍为矩形**的模块 $m_i$ 和 $m_j$ 进行
+合并。
+\begin{equation}
+    a_t = \text{Merge}(m_i, m_j)
+\end{equation}
+
+该动作机制的核心优势在于其天然的“空间邻接感知”特性：
+\begin{enumerate}
+    \item \textbf{邻接约束：} 只有物理上相邻（共享边界）的模块
+    才能被合并，这确保了局部空间的连通性。
+    \item \textbf{矩形约束：} 合并后的新模块必须保持矩形
+    形状，以满足模块化建筑标准化制造的硬性要求。
+\end{enumerate}
+
+如图 \ref{fig:action_merge} 所示，智能体通过不断执行合并动作
+，将初始的原子网格逐步聚合，直至无法找到合法的合并对象或达到
+预设的终止条件。
+
+% 请将此处的文件名替换为您 tex 文件中 Figure 4 对应的实际文件名
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figs/action_merge.png}
+    \caption{空间邻接感知的合并动作示意图。智能体仅能合并共享边界且合并结果为矩形的相邻模块。}
+    \label{fig:action_merge}
+\end{figure}
+
+\subsection{奖励函数设计}
+\label{subsec:reward_function}
+
+为了引导智能体向着“覆盖率高、模块数量少、标准化程度高”的目
+标优化，我们设计了一个多目标奖励函数 $R$。在每一步合并操作后
+，智能体获得的即时奖励 $r_t$ 定义如下：
+
+\begin{equation}
+    r_t = \alpha \cdot r_{\text{area}} + \beta \cdot r_{\text{count}} + \gamma \cdot r_{\text{std}}
+\end{equation}
+
+\begin{itemize}
+    \item \textbf{面积奖励 ($r_{\text{area}}$)：} 鼓励生成更
+    大的模块。合并产生的新模块面积越大，奖励值越高。
+    \item \textbf{数量惩罚 ($r_{\text{count}}$)：} 旨在减少
+    模块总数。每成功执行一次合并，模块总数减少一个，给予正向奖励。
+    \item \textbf{标准化奖励 ($r_{\text{std}}$)：} 旨在
+    提高模数化程度。若合并后的模块尺寸符合预定义的标准
+    模数系列（如 $3m$ 的倍数），则给予额外的奖励。
+\end{itemize}
+
+其中，$\alpha, \beta, \gamma$ 为权重系数。通过这一奖
+励机制，智能体能够在巨大的解空间中自动权衡不同设计目标，寻
+找全局最优解。
+
+\subsection{网络架构与训练策略}
+\label{subsec:network_training}
+
+为了构建状态 $s_t$ 到动作 $a_t$ 的映射关系，本研究采用了深
+度Q网络（Deep Q-Network, DQN）算法。DQN 结合了深度学习的
+感知能力与强化学习的决策能力，能够有效处理高维状态空间下的
+策略学习问题。
+
+\subsubsection{网络架构}
+如图 \ref{fig:network_arch} 所示，我们设计了一个深度神经
+网络（Deep Neural Network）作为Q函数逼近器，用于拟合动作
+价值函数 $Q(s, a; \theta)$。
+\begin{itemize}
+    \item \textbf{输入层：} 接收经过预处理的网格状态矩阵。
+    该矩阵编码了当前的模块分布与几何特征。
+    \item \textbf{隐藏层：} 通过多层神经元进行特征提取与
+    非线性变换，捕捉局部几何特征与全局空间模式。
+    \item \textbf{输出层：} 输出一个向量，向量维度对应当
+    前状态下所有潜在合并动作的数量。每个输出值代表执行对
+    应动作的预期Q值（Quality Value），即长期累积回报。
+\end{itemize}
+
+\subsubsection{训练策略}
+为了提高训练的稳定性和收敛速度，本研究采用了以下策略：
+\begin{itemize}
+    \item \textbf{$\epsilon$-贪婪策略（$\epsilon$-gr
+    eedy Policy）：} 在动作选择阶段，以概率 $\epsilon$ 随机
+    选择动作以保持探索性（Exploration），以概率 $1-\epsilon$ 选
+    择当前Q值最大的动作以利用已知经验（Exploitation）。随着训
+    练的进行，$\epsilon$ 值逐渐减小，使智能体从探索逐渐转向利用。
+    \item \textbf{经验回放（Experience Replay）：} 构建经验
+    池存储智能体的交互样本 $(s_t, a_t, r_t, s_{t+1})$。训练时
+    从中随机采样小批量数据（Mini-batch）进行梯度下降更新。这
+    一机制打破了样本间的时序相关性，显著提升了数据利用率和训练
+    稳定性。
+    \item \textbf{目标网络（Target Network）：} 引入一个独立
+    的、参数更新滞后的目标网络 $\hat{Q}$ 来计算目标Q值。这减少
+    了目标值与预测值之间的相关性，有效抑制了训练过程中的震荡。
+\end{itemize}
+
+% 请将此处的文件名替换为您 tex 文件中 Figure 5 对应的实际文件名
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\textwidth]{figs/network_structure.png}
+    \caption{深度Q网络（DQN）架构示意图。网络接收网格状态输入，通过深度神经网络拟合动作价值函数，输出各潜在合并动作的Q值。}
+    \label{fig:network_arch}
+\end{figure}
+
+
+\section{实验结果与分析}
+\label{sec:experiments}
+
+为了验证所提出的空间邻接感知模块化方法的有效性，我们进行了一系列广泛的实验。本节首先介绍数据集的构建过程和实验设置，随后定义用于量化评估布局质量的评价指标，最后展示定量对比结果与定性可视化分析。
+
+\subsection{数据集构建与预处理}
+\label{subsec:dataset}
+
+由于目前缺乏公开的模块化建筑平面布局数据集，本研究构建了一个包含多样化建筑轮廓的大规模合成数据集。数据集的生成过程旨在模拟现实世界中复杂多变的用地条件。
+
+我们采用了基于随机游走（Random Walk）和几何约束的生成算法来创建建筑轮廓。具体步骤如下：
+\begin{enumerate}
+    \item \textbf{轮廓生成：} 在连续空间内随机生成一系列多边形顶点，通过连接这些顶点形成闭合的建筑轮廓 $\mathcal{P}$。为了确保轮廓的真实性，我们施加了正交性约束，使得生成的轮廓主要由水平和垂直边缘组成，同时允许一定比例的斜边以模拟不规则用地。
+    \item \textbf{真值生成（Ground Truth）：} 针对每一个生成的轮廓，利用穷举搜索算法在离线阶段生成对应的高质量模块化布局作为训练的监督信号（或基准）。虽然强化学习本身不需要监督标签，但这些真值可用于评估模型的收敛性能。
+    \item \textbf{数据划分：} 最终数据集包含 10,000 个样本。我们将数据集随机划分为训练集（80\%）、验证集（10\%）和测试集（10\%）。
+\end{enumerate}
+
+如图 \ref{fig:dataset_samples} 所示，数据集涵盖了从简单的凸多边形到复杂的凹多边形等多种轮廓类型，能够充分测试算法在不同几何复杂度下的泛化能力。
+
+% 请将此处的文件名替换为您 tex 文件中 Figure 6 对应的实际文件名
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1\textwidth]{figs/dataset_samples.png}
+    \caption{数据集样本示例。展示了不同复杂度的建筑轮廓输入及其对应的模块化布局参考。}
+    \label{fig:dataset_samples}
+\end{figure}
+
+\subsection{评价指标}
+\label{subsec:metrics}
+
+为了全面评估生成布局的质量，本研究定义了三个核心评价指标，分别对应覆盖率、标准化程度和计算效率。
+
+\subsubsection{覆盖率 (Coverage Rate, CR)}
+覆盖率衡量了生成的模块化布局对原始建筑轮廓的填充程度，是评估空间利用率的关键指标。其计算公式为：
+\begin{equation}
+    \text{CR} = \frac{\sum_{m \in \mathcal{M}} \text{Area}(m)}{\text{Area}(\mathcal{P})} \times 100\%
+\end{equation}
+其中，$\mathcal{M}$ 是生成的模块集合，$\mathcal{P}$ 是原始建筑轮廓。$\text{CR}$ 值越高，表示死角空间越少，得房率越高。
+
+\subsubsection{模块标准化率 (Standardization Ratio, SR)}
+标准化率用于评估布局中模块规格的统一程度，直接关联制造成本。我们将其定义为主要模块类型（出现频率最高的 Top-K 种模块）所占面积的比例：
+\begin{equation}
+    \text{SR} = \frac{\sum_{m \in \mathcal{M}_{\text{std}}} \text{Area}(m)}{\sum_{m \in \mathcal{M}} \text{Area}(m)} \times 100\%
+\end{equation}
+其中，$\mathcal{M}_{\text{std}}$ 表示属于标准尺寸集合的模块子集。$\text{SR}$ 值越高，意味着生产线的模具复用率越高，经济性越好。
+
+\subsubsection{邻接一致性 (Adjacency Consistency, AC)}
+为了量化算法对空间拓扑关系的保持能力，我们提出了邻接一致性指标。该指标计算生成布局的邻接图与原始空间邻接图之间的相似度：
+\begin{equation}
+    \text{AC} = \frac{|E_{\text{gen}} \cap E_{\text{orig}}|}{|E_{\text{orig}}|}
+\end{equation}
+其中，$E_{\text{gen}}$ 和 $E_{\text{orig}}$ 分别表示生成布局和原始空间划分中的邻接边集合。$\text{AC}$ 值越高，说明房间之间的功能联系被保留得越完整。
 
 
 
