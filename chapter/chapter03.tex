@@ -223,10 +223,28 @@ ement Learning, DRL）的端到端模块化布局生成框架。该框架不依�
 % 请确认您 tex 文件中 Figure 2 的实际文件名，此处暂用 figs/grid_decomposition.pdf
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=1\textwidth]{figs/grid_decomposition.pdf}
+    \includegraphics[width=1\textwidth]{Fig2/figure1.png}
     \caption{正交网格分解（OGD）过程示意图：(a) 原始建筑平面轮廓；(b) 网格离散化处理；(c) 生成的初始原子网格集合。该过程将连续的几何约束转化为离散的矩阵表示。}
     \label{fig:grid_decomposition}
 \end{figure}
+
+\subsection{模块尺寸归一化 (Modular Size Normalization)}
+\label{subsec:msn}
+
+正交网格分解（OGD）虽然能实现全覆盖，但可能产生超出制造限制的过大矩形。为了解
+决这一问题，本研究在 OGD 之后引入了模块尺寸归一化（MSN）过程。
+
+MSN 采用递归分割策略对尺寸超限的模块进行处理：
+\begin{itemize}
+    \item \textbf{宽度约束处理：} 对于宽度超过 $W_{max}$ 的矩形，执行水平分割
+    ，将其划分为若干宽度均匀的子段。
+    \item \textbf{高度约束处理：} 对于高度超过 $H_{max}$ 的矩形，执行垂直分割，
+    将其划分为若干高度均匀的子段。
+\end{itemize}
+
+经过 MSN 处理后，输出的模块集合 $\mathcal{M} = \{m_1, m_2, \dots, m_k\}$ 既保证
+了对原始轮廓的几何覆盖，又严格符合预设的制造与运输尺寸限制，为后续的强化学习优化
+提供了合法的初始状态空间。
 
 \section{空间邻接感知的深度强化学习算法}
 \label{sec:drl_algorithm}
@@ -239,32 +257,20 @@ ement Learning, DRL）的端到端模块化布局生成框架。该框架不依�
 \subsection{状态空间设计}
 \label{subsec:state_space}
 
-为了使智能体能够全面理解当前的布局状态，我们设计了一种包含
-几何信息与拓扑信息的多模态状态表示 $S_t = (\mathcal{I}_t, 
-\mathcal{G}_t)$。
+为了在保证计算效率的同时捕捉关键布局特征，不同于计算昂贵的图像输入，我们将智能体的状态 $s_t$ 封装为一个紧凑的**七维特征向量**。该向量编码了当前的几何统计信息与拓扑属性：
 
-\begin{enumerate}
-    \item \textbf{几何状态 ($\mathcal{I}_t$)：} 这是一个二维
-	矩阵，直观地表示了当前建筑平面的几何占据情况。矩阵中的每个
-	元素对应一个原子网格，其值标识该网格所属的模块编号。通过卷
-	积神经网络（CNN）处理这一状态，智能体可以提取出模块的形状、
-	尺寸以及位置特征。
-    \item \textbf{拓扑状态 ($\mathcal{G}_t$)：} 这是一个无向
-	图，用于显式地编码模块之间的邻接关系。图中的节点代表当前的
-	模块，边则代表模块之间的物理邻接。
-\end{enumerate}
+\begin{equation}
+state = [N_m, N_t, A_a, A_{max}, A_{min}, A_{adj}, C_s]
+\end{equation}
 
-如图 \ref{fig:state_space} 所示，这种双重状态表示不仅让智能
-体“看到”了模块在哪里（几何），还让它“理解”了模块与谁相连（拓扑）。
-这对维持房间功能的连续性至关重要，防止了不合理的分割切断空间联系。
+各分量定义如下：
+\begin{itemize}
+    \item \textbf{全局计数特征：} $N_m$ 为当前模块总数，反映合并进度；$N_t$ 为不同模块类型的数量，直接对应标准化程度（越低越好）。
+    \item \textbf{面积统计特征：} 包含平均面积 $A_a$、最大面积 $A_{max}$ 和最小面积 $A_{min}$。这些指标帮助智能体识别过小的碎片区域或潜在的合并机会。
+    \item \textbf{拓扑与形状特征：} $A_{adj}$ 为归一化的相邻对计数，衡量当前布局的合并潜力；$C_s$ 为平均形状复杂度，用于惩罚不规则形状。
+\end{itemize}
 
-% 请将此处的文件名 'figs/state_space.png' 替换为您 tex 文件中 Figure 3 的实际文件名
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=1\textwidth]{figs/state_space.png} 
-    \caption{空间邻接感知的多模态状态表示示意图。(a) 几何状态：表示模块分布的二维矩阵；(b) 拓扑状态：表示模块邻接关系的对偶图。两者共同构成了强化学习的输入状态。}
-    \label{fig:state_space}
-\end{figure}
+这种低维向量表示法确保了智能体能够快速推理，避免了处理高维图像数据带来的计算开销。
 
 \subsection{动作空间与合并机制}
 \label{subsec:action_space}
@@ -287,7 +293,7 @@ ularity Constraint）**：即 $m_i$ 和 $m_j$ 合并后的形状必
 % 请将此处的文件名 'figs/action_merge.png' 替换为您 tex 文件中 Figure 4 的实际文件名
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.8\textwidth]{figs/action_merge.png}
+    \includegraphics[width=0.8\textwidth]{Fig2/figure3.png}
     \caption{基于合并策略的动作空间示意图。智能体选择相邻的两个单元进行合并，前提是合并后的新单元必须保持矩形特征，以满足模块化制造的几何约束。}
     \label{fig:action_merge}
 \end{figure}
@@ -295,121 +301,39 @@ ularity Constraint）**：即 $m_i$ 和 $m_j$ 合并后的形状必
 \subsection{奖励函数设计}
 \label{subsec:reward_function}
 
-为了引导智能体搜索出既满足几何覆盖又具备高度标准化的布局，
-我们设计了一个多目标奖励函数 $R_t$。该函数由三个核心部分组成：
+为了引导智能体在满足 DfMA（面向制造与装配的设计）原则的同时优化空间布局，我们设计了一个包含六个竞争目标的多目标奖励函数。该函数通过线性加权的方式平衡各优化目标：
 
 \begin{equation}
-    R_t = w_1 \cdot r_{\text{cov}} + w_2 \cdot r_{\text{num}} + w_3 \cdot r_{\text{std}}
-    \label{eq:reward_function}
+\begin{split}
+R = & \ w_{count} \cdot R_{count} + w_{type} \cdot R_{type} + w_{util} \cdot R_{util} \\
+    & + w_{complexity} \cdot R_{complexity} + w_{compactness} \cdot R_{compactness} \\
+    & + R_{validity} + R_{multi}
+\end{split}
+\label{eq:reward_function}
 \end{equation}
 
-\begin{itemize}
-    \item \textbf{覆盖奖励 ($r_{\text{cov}}$)：} 鼓励生成的
-	模块尽可能多地覆盖原始建筑轮廓。
-    \item \textbf{数量惩罚 ($r_{\text{num}}$)：} 旨在最小化
-	模块总数。每执行一次有效的合并操作，模块数量减少，智能体获
-	得正向奖励。这有助于生成大尺寸的模块，减少现场吊装次数。
-    \item \textbf{标准化奖励 ($r_{\text{std}}$)：} 鼓励生成
-	标准尺寸的模块。若合并后的模块尺寸 $(w, h)$ 属于预设
-	的标准化模数集合 $\mathcal{S}$，则给予额外的奖励
-	。这一项直接优化了模块的可制造性。
-\end{itemize}
+其中各项的具体含义与权重配置如表 \ref{tab:hyperparameters} 所示。我们特别为 $R_{type}$ 分配了较高的权重（16.0），以显式地鼓励智能体优先考虑模块类型的标准化。此外，设置了严厉的无效惩罚 $R_{validity}$ (-50.0) 以确保几何可行性。
 
-其中，$w_1, w_2, w_3$ 为权重系数，用于平衡各优化目标的
-重要性。通过这一奖励机制，智能体能够在复杂的决策空间中，
-自动权衡覆盖率、施工效率与制造成本，最终收敛至全局最优的
-模块化布局方案。
+\begin{table}[htbp]
+\centering
+\caption{超参数设置与奖励函数权重配置}
+\label{tab:hyperparameters}
+\begin{tabular}{ll|ll}
+\toprule
+\multicolumn{2}{c|}{\textbf{训练超参数}} & \multicolumn{2}{c}{\textbf{奖励权重 (Eq. \ref{eq:reward_function})}} \\
+\midrule
+\textbf{参数} & \textbf{数值} & \textbf{符号} & \textbf{数值} \\
+\midrule
+批次大小 (Batch Size) & 32 & $w_{count}$ (数量减少) & 8.0 \\
+经验池容量 (Replay Memory) & 10,000 & $w_{type}$ (类型标准化) & 16.0 \\
+折扣因子 ($\gamma$) & 0.99 & $w_{util}$ (尺寸利用率) & 5.0 \\
+学习率 ($\alpha$) & 0.001 & $w_{complexity}$ (形状简单度) & 2.0 \\
+最大回合数 (Max Episodes) & 100 & $w_{compactness}$ (空间紧凑度) & 3.0 \\
+无效惩罚 ($R_{validity}$) & -50.0 & 多重合并奖励 ($R_{multi}$) & 10.0 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-
-\section{空间邻接感知的深度强化学习算法}
-\label{sec:drl_algorithm}
-
-基于前一节生成的初始原子网格环境，本节将模块化平面布
-局的生成过程建模为一个马尔可夫决策过程（MDP）。我们提出
-了一种空间邻接感知的深度强化学习框架，通过智能体与环境的交互
-，逐步学习如何将细碎的网格合并为最优的模块化布局。
-
-\subsection{状态空间设计}
-\label{subsec:state_space}
-
-为了使智能体能够感知当前的布局几何特征，状态空间 $S$ 被定义
-为一个二维的特征矩阵（Feature Map）。设初始的正交网格系统尺
-寸为 $H \times W$，则状态 $s_t$ 可以表示为
-一个 $H \times W$ 的矩阵，矩阵中的每一个元素对应一个
-原子网格。
-
-元素的值用于标识该网格当前所属的模块索引（Module Index）。如
-图 \ref{fig:state_representation} 所示，具有相同索
-引值的相邻网格构成了一个完整的模块。这种基于网格的状态表示法能
-够完整地保留平面轮廓的几何信息以及模块之间的相对位置关系，为卷
-积神经网络提取空间特征提供了直接的输入形式。
-
-% 请将此处的文件名替换为您 tex 文件中 Figure 3 对应的实际文件名
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.8\textwidth]{figs/state_representation.png} 
-    \caption{基于网格的状态空间表示示意图。矩阵中的数值代表模块索引，相同数值的连通区域构成一个独立的模块。}
-    \label{fig:state_representation}
-\end{figure}
-
-\subsection{动作空间与合并机制}
-\label{subsec:action_space}
-
-传统的布局生成方法多采用“自顶向下”的分割策略，而本研究创
-新性地采用“自底向上”的**合并（Merge）**策略。动作
-空间 $\mathcal{A}$ 由所有合法的合并操作组成。
-
-在任意时间步 $t$，智能体的一个动作 $a_t$ 定义为：选择两
-个**空间相邻**且**合并后仍为矩形**的模块 $m_i$ 和 $m_j$ 进行
-合并。
-\begin{equation}
-    a_t = \text{Merge}(m_i, m_j)
-\end{equation}
-
-该动作机制的核心优势在于其天然的“空间邻接感知”特性：
-\begin{enumerate}
-    \item \textbf{邻接约束：} 只有物理上相邻（共享边界）的模块
-    才能被合并，这确保了局部空间的连通性。
-    \item \textbf{矩形约束：} 合并后的新模块必须保持矩形
-    形状，以满足模块化建筑标准化制造的硬性要求。
-\end{enumerate}
-
-如图 \ref{fig:action_merge} 所示，智能体通过不断执行合并动作
-，将初始的原子网格逐步聚合，直至无法找到合法的合并对象或达到
-预设的终止条件。
-
-% 请将此处的文件名替换为您 tex 文件中 Figure 4 对应的实际文件名
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=0.8\textwidth]{figs/action_merge.png}
-    \caption{空间邻接感知的合并动作示意图。智能体仅能合并共享边界且合并结果为矩形的相邻模块。}
-    \label{fig:action_merge}
-\end{figure}
-
-\subsection{奖励函数设计}
-\label{subsec:reward_function}
-
-为了引导智能体向着“覆盖率高、模块数量少、标准化程度高”的目
-标优化，我们设计了一个多目标奖励函数 $R$。在每一步合并操作后
-，智能体获得的即时奖励 $r_t$ 定义如下：
-
-\begin{equation}
-    r_t = \alpha \cdot r_{\text{area}} + \beta \cdot r_{\text{count}} + \gamma \cdot r_{\text{std}}
-\end{equation}
-
-\begin{itemize}
-    \item \textbf{面积奖励 ($r_{\text{area}}$)：} 鼓励生成更
-    大的模块。合并产生的新模块面积越大，奖励值越高。
-    \item \textbf{数量惩罚 ($r_{\text{count}}$)：} 旨在减少
-    模块总数。每成功执行一次合并，模块总数减少一个，给予正向奖励。
-    \item \textbf{标准化奖励 ($r_{\text{std}}$)：} 旨在
-    提高模数化程度。若合并后的模块尺寸符合预定义的标准
-    模数系列（如 $3m$ 的倍数），则给予额外的奖励。
-\end{itemize}
-
-其中，$\alpha, \beta, \gamma$ 为权重系数。通过这一奖
-励机制，智能体能够在巨大的解空间中自动权衡不同设计目标，寻
-找全局最优解。
 
 \subsection{网络架构与训练策略}
 \label{subsec:network_training}
@@ -419,19 +343,19 @@ ularity Constraint）**：即 $m_i$ 和 $m_j$ 合并后的形状必
 感知能力与强化学习的决策能力，能够有效处理高维状态空间下的
 策略学习问题。
 
-\subsubsection{网络架构}
-如图 \ref{fig:network_arch} 所示，我们设计了一个深度神经
-网络（Deep Neural Network）作为Q函数逼近器，用于拟合动作
-价值函数 $Q(s, a; \theta)$。
+\subsection{神经网络架构}
+\label{subsec:network_arch}
+
+鉴于状态空间已被精简为特征向量，本研究采用了高效的前馈神经网络（Feedforward Neural Network, FNN）作为 DQN 的函数近似器，而非复杂的卷积网络。
+
+如图 \ref{fig:dqn_architecture} 所示，网络架构具体配置如下：
 \begin{itemize}
-    \item \textbf{输入层：} 接收经过预处理的网格状态矩阵。
-    该矩阵编码了当前的模块分布与几何特征。
-    \item \textbf{隐藏层：} 通过多层神经元进行特征提取与
-    非线性变换，捕捉局部几何特征与全局空间模式。
-    \item \textbf{输出层：} 输出一个向量，向量维度对应当
-    前状态下所有潜在合并动作的数量。每个输出值代表执行对
-    应动作的预期Q值（Quality Value），即长期累积回报。
+    \item \textbf{输入层：} 包含 7 个神经元，直接对应七维状态向量。
+    \item \textbf{隐藏层：} 设计了两个全连接隐藏层。第一层包含 64 个神经元，第二层包含 32 个神经元。所有隐藏层均采用 ReLU \citep{nair2010rectified} 作为激活函数，以引入非线性映射能力。
+    \item \textbf{输出层：} 输出节点的数量对应于当前状态下所有合法合并动作的数量。每个节点输出对应动作的 Q 值（即预期的长期累积奖励）。
 \end{itemize}
+
+该轻量级架构使得智能体能够在毫秒级内完成推理，满足了布局优化对实时性的要求。
 
 \subsubsection{训练策略}
 为了提高训练的稳定性和收敛速度，本研究采用了以下策略：
@@ -454,7 +378,7 @@ ularity Constraint）**：即 $m_i$ 和 $m_j$ 合并后的形状必
 % 请将此处的文件名替换为您 tex 文件中 Figure 5 对应的实际文件名
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=1\textwidth]{figs/network_structure.png}
+    \includegraphics[width=1\textwidth]{Fig2/figure6.png}
     \caption{深度Q网络（DQN）架构示意图。网络接收网格状态输入，通过深度神经网络拟合动作价值函数，输出各潜在合并动作的Q值。}
     \label{fig:network_arch}
 \end{figure}
@@ -465,27 +389,25 @@ ularity Constraint）**：即 $m_i$ 和 $m_j$ 合并后的形状必
 
 为了验证所提出的空间邻接感知模块化方法的有效性，我们进行了一系列广泛的实验。本节首先介绍数据集的构建过程和实验设置，随后定义用于量化评估布局质量的评价指标，最后展示定量对比结果与定性可视化分析。
 
-\subsection{数据集构建与预处理}
+\subsection{实验设置与数据集}
 \label{subsec:dataset}
 
-由于目前缺乏公开的模块化建筑平面布局数据集，本研究构建了一个包含多样化建筑轮廓的大规模合成数据集。数据集的生成过程旨在模拟现实世界中复杂多变的用地条件。
+为了系统地验证所提出强化学习框架的有效性与鲁棒性，本研究建立了一个
+包含不同几何复杂度的综合数据集（Dataset）。依据英文原文描述，该数据集
+具体由以下两组场景构成：
 
-我们采用了基于随机游走（Random Walk）和几何约束的生成算法来创建建筑轮廓。具体步骤如下：
 \begin{enumerate}
-    \item \textbf{轮廓生成：} 在连续空间内随机生成一系列多边形顶点，通过连接这些顶点形成闭合的建筑轮廓 $\mathcal{P}$。为了确保轮廓的真实性，我们施加了正交性约束，使得生成的轮廓主要由水平和垂直边缘组成，同时允许一定比例的斜边以模拟不规则用地。
-    \item \textbf{真值生成（Ground Truth）：} 针对每一个生成的轮廓，利用穷举搜索算法在离线阶段生成对应的高质量模块化布局作为训练的监督信号（或基准）。虽然强化学习本身不需要监督标签，但这些真值可用于评估模型的收敛性能。
-    \item \textbf{数据划分：} 最终数据集包含 10,000 个样本。我们将数据集随机划分为训练集（80\%）、验证集（10\%）和测试集（10\%）。
+    \item \textbf{标准模块化场景 (Standard Modular Scenarios)：} 包含源自真
+    实住宅项目的典型建筑平面（案例 JF, LM, ZH），主要用于验证算法在常规布局标
+    准化方面的能力。
+    \item \textbf{大规模复杂场景 (Large-Scale Complex Scenarios)：} 包含具有
+    大尺度边界和高维搜索空间的复杂平面（案例 GF, XZ, HY），旨在测试算法在
+    处理复杂空间约束时的可扩展性与稳定性。
 \end{enumerate}
 
-如图 \ref{fig:dataset_samples} 所示，数据集涵盖了从简单的凸多边形到复杂的凹多边形等多种轮廓类型，能够充分测试算法在不同几何复杂度下的泛化能力。
-
-% 请将此处的文件名替换为您 tex 文件中 Figure 6 对应的实际文件名
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=1\textwidth]{figs/dataset_samples.png}
-    \caption{数据集样本示例。展示了不同复杂度的建筑轮廓输入及其对应的模块化布局参考。}
-    \label{fig:dataset_samples}
-\end{figure}
+所有实验均在配置 Intel Core i5-13400F CPU 和 NVIDIA RTX 4070 GPU 的工作站上进行。
+算法基于 Python 和 PyTorch 库实现。DQN 智能体的超参数（如 $\epsilon$-greedy 策
+略的衰减因子 0.95）均经过经验微调以平衡探索与利用。
 
 \subsection{评价指标}
 \label{subsec:metrics}
@@ -515,7 +437,199 @@ ularity Constraint）**：即 $m_i$ 和 $m_j$ 合并后的形状必
 
 
 
+\section{实验结果与分析}
+\label{sec:experiments}
 
+本节将详细阐述所提出的空间邻接感知模块化生成框架的实验评估。首先介绍用于训练和测试的数据集生成过程及参数设置，随后定义用于量化布局质量的评价指标，最后展示模型在不同复杂度建筑轮廓下的生成结果。
+
+\subsection{数据集生成与实验设置}
+\label{subsec:dataset_setup}
+
+由于缺乏公开的模块化建筑平面布局数据集，本研究构建了一个包含多样化建筑轮廓的合成数据集。为了模拟现实世界中复杂多变的用地条件，我们采用随机生成算法创建了训练样本。
+
+\subsubsection{数据生成}
+数据集包含不同几何特征的建筑轮廓，涵盖了从简单的凸多边形（如矩形、L形）到复杂的凹多边形。每个轮廓被离散化为正交网格，作为智能体的初始环境。我们共生成了 \textbf{[请填入具体数量]} 个样本，并按照 \textbf{[请填入比例]} 的比例将其划分为训练集和测试集。
+
+\subsubsection{参数设置}
+实验基于深度强化学习框架进行。在DQN训练过程中，超参数设置如下：经验回放池（Replay Buffer）大小设定为 \textbf{[数值]}，折扣因子 $\gamma$ 设为 \textbf{[数值]}，学习率设为 \textbf{[数值]}。为了平衡探索与利用，采用 $\epsilon$-贪婪策略，$\epsilon$ 值随训练步数从 \textbf{[初始值]} 线性衰减至 \textbf{[最终值]}。
+
+% 请替换为您 tex 文件中对应“数据集”或“训练曲线”的图片文件名
+\begin{figure}[H]
+\centering
+\includegraphics[width=1\textwidth]{Fig2/figure8.png} 
+\caption{数据集样本示例及训练过程中的奖励收敛曲线。}
+\label{fig:dataset_training}
+\end{figure}
+
+\subsection{评价指标}
+\label{subsec:metrics}
+
+为了全面评估生成布局的质量，本研究主要关注以下三个核心指标，这也与奖励函数的设计保持一致：
+
+\begin{enumerate}
+    \item \textbf{覆盖率 (Coverage Rate, CR)}：衡量生成的模块化布局对原始建筑轮廓的填充程度。高覆盖率意味着更高的空间利用率和得房率。
+    \item \textbf{模块标准化率 (Standardization Ratio, SR)}：定义为标准尺寸模块面积占总建筑面积的比例。该指标直接反映了布局的可制造性与经济性。
+    \item \textbf{邻接完整性 (Adjacency Integrity)}：评估生成的布局是否保持了原始空间的连通性，即是否避免了将单一功能空间不合理地分割为互不连通的孤岛。
+\end{enumerate}
+
+\subsection{结果分析}
+\label{subsec:results}
+
+\subsubsection{标准模块化场景性能评估}
+表 \ref{tab:std_performance} 展示了在三个标准案例（JF, LM, ZH）中，本方法与人工划分基准的详细对比。
+实验结果表明，智能体成功习得了符合 DfMA 原则的策略。特别是在案例 ZH 中，为了最大化标准化程度，智能体将模块类型数量 ($C_t$) 从人工方案的 19 种显著降低至 15 种（降幅 21.05\%），同时仅略微增加了 1 个模块数量。这证明了算法能够在保证覆盖率的前提下，有效权衡制造成本（模具数量）与吊装成本（模块数量）。
+
+% \begin{table}[htbp]
+%     \centering
+%     \caption{标准模块化场景下的性能对比（人工划分 vs 本文方法）}
+%     \label{tab:std_performance}
+%     \begin{tabular}{lcccl}
+%         \toprule
+%         \textbf{案例} & \textbf{指标} & \textbf{人工划分} & \textbf{本文方法 (RL)} & \textbf{变化幅度} \\
+%         \midrule
+%         \multirow{2}{*}{Case JF} & $C_m$ (数量) & 10 & \textbf{11} & $\uparrow$ 10\% \\
+%                                  & $C_t$ (类型) & 8 & \textbf{7} & $\downarrow$ 12.5\% (优化) \\
+%         \midrule
+%         \multirow{2}{*}{Case LM} & $C_m$ (数量) & 7 & \textbf{7} & 持平 \\
+%                                  & $C_t$ (类型) & 6 & \textbf{5} & $\downarrow$ 16.67\% (优化) \\
+%         \midrule
+%         \multirow{2}{*}{Case ZH} & $C_m$ (数量) & 19 & \textbf{20} & $\uparrow$ 5.26\% \\
+%                                  & $C_t$ (类型) & 19 & \textbf{15} & $\downarrow$ 21.05\% (显著优化) \\
+%         \bottomrule
+%     \end{tabular}
+% \end{table}
+
+\begin{table}[htbp]
+    \centering
+    \caption{Comparative performance analysis between Manual Partitioning and the Proposed RL Framework across standard modular scenarios.}
+    \label{tab:performance_comparison}
+    
+    \begin{tabular}{ c m{0.32\linewidth}<{\centering} m{0.32\linewidth}<{\centering} m{0.22\linewidth} }
+        \toprule
+        Case & Manual Partitioning & Ours (RL) & Metrics Comparison \\
+        \midrule
+        \addlinespace[5pt] 
+        
+        % --- Case 1: JF ---
+        JF 
+        & 
+        \raisebox{-0.5\height}{\includegraphics[width=0.95\linewidth, height=2.5cm, keepaspectratio]{Fig2/figure7_1.png}}%
+        & 
+        \raisebox{-0.5\height}{\includegraphics[width=0.95\linewidth, height=2.5cm, keepaspectratio]{Fig2/figure7_2.png}}%
+        & 
+        \begin{tabular}{@{}l@{}}
+            $C_m$: $10 \to \mathbf{11}$ \\ 
+            \small{\textcolor{gray}{($\uparrow$ 10\%)}} \\[0.5em]
+            $C_t$: $8 \to \mathbf{7}$ \\
+            \small{\textcolor{gray}{($\downarrow$ 12.5\%)}} \\[0.5em]
+        \end{tabular}
+        \\
+        \addlinespace[5pt] 
+        \cmidrule(l){2-4}
+        \addlinespace[5pt] 
+        
+        % --- Case 2: LM ---
+        LM  
+        & 
+        \raisebox{-0.5\height}{\includegraphics[width=0.95\linewidth, height=2.5cm, keepaspectratio]{Fig2/figure7_3.png}}%
+        & 
+        \raisebox{-0.5\height}{\includegraphics[width=0.95\linewidth, height=2.5cm, keepaspectratio]{Fig2/figure7_4.png}}%
+        & 
+        \begin{tabular}{@{}l@{}}
+            $C_m$: $7 \to \mathbf{7}$ \\ 
+            \small{\textcolor[gray]{0.5}{(Equal)}} \\[0.5em]
+            
+            $C_t$: $6 \to \mathbf{5}$ \\
+            \small{\textcolor[gray]{0.5}{($\downarrow$ 16.67\%)}}
+        \end{tabular}
+        \\
+        \addlinespace[5pt]
+        \cmidrule(l){2-4}
+        \addlinespace[5pt]
+        
+        % --- Case 3: ZH ---
+        ZH  
+        & 
+        \raisebox{-0.5\height}{\includegraphics[width=0.95\linewidth, height=2.5cm, keepaspectratio]{Fig2/figure7_5.png}}%
+        & 
+        \raisebox{-0.5\height}{\includegraphics[width=0.95\linewidth, height=2.5cm, keepaspectratio]{Fig2/figure7_6.png}}%
+        & 
+        \begin{tabular}{@{}l@{}}
+            $C_m$: $19 \to \mathbf{20}$ \\ 
+            \small{\textcolor{gray}{($\uparrow$ 5.26\%)}} \\[0.5em]
+            $C_t$: $19 \to \mathbf{15}$ \\
+            \small{\textcolor{gray}{($\downarrow$ 21.05\%)}} \\[0.5em] 
+        \end{tabular}
+        \\
+        \addlinespace[5pt]
+        
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsubsection{大规模复杂场景的可扩展性}
+对于具有高度非凸边界的大规模场景，表 \ref{tab:large_scale_results} 统计了生成布局的模块指标。以最复杂的 Case XZ 为例，在初始包含超过 200 个原子网格的巨大搜索空间中，算法成功将最终模块数量控制在 151 个，并保持模块类型仅为 19 种。在 Case HY 中，算法实现了极高的模块复用率，仅用 6 种模块类型即覆盖了 68 个模块区域（平均每种模具复用约 11.3 次）。
+
+\begin{table}[htbp]
+\centering
+\caption{大规模复杂场景下的优化结果统计}
+\label{tab:large_scale_results}
+\begin{tabular}{lccc}
+\toprule
+\textbf{评价指标} & \textbf{案例 GF} & \textbf{案例 XZ} & \textbf{案例 HY} \\
+\midrule
+模块总数 ($C_m$) & 46 & 151 & 68 \\
+模块类型数 ($C_t$) & 19 & 19 & 6 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{讨论}
+\label{sec:discussion}
+
+实验结果证明了所提出的框架在解决模块化布局优化这一组合难题上的有效性。除了数值上的提升，本节将进一步分析智能体的决策逻辑，特别是奖励权重的调整如何影响面向制造与装配的设计（DfMA）中的关键权衡。
+
+\subsection{DfMA权衡的解读与偏好学习}
+\label{subsec:dfma_tradeoff}
+
+通过对比分析标准案例的优化结果，我们发现智能体对奖励函数中的多目标配置表现出高度的敏感性。
+在案例 JF 中，智能体生成了一个模块数量略有增加（$C_m: 10 \to 11$）但模块类型显著减少（$C_t: 8 \to 7$）的方案。这一结果并非偶然，而是奖励重塑策略的直接体现。
+
+通过为 $R_{type}$（模块类型标准化）分配较大的权重，我们显式地激励智能体优先考虑“标准化”而非单纯的“数量最小化”。与通常依赖几何直觉来最小化切割线（从而减少 $C_m$）的人工划分不同，强化学习智能体成功习得了一种非直观的全局策略：它牺牲了局部的合并效率，以换取整体模块复用率（Module Reuse Rate）的最大化。
+
+在预制建筑的语境下，这种策略在经济上是更优的。因为与模具制造和生产线重组相关的“多样性成本”（Cost of Variety），往往远高于运输少数几个额外标准化单元的边际物流成本。案例 JF 的行为证实，本框架不仅仅是在进行几何填充，而是能够智能地将策略与奖励函数中编码的高层级 DfMA 偏好保持一致。
+
+\subsection{可扩展性与搜索空间管理}
+\label{subsec:scalability}
+
+在大规模复杂场景（如案例 XZ）上的可扩展性分析凸显了\textit{空间邻接感知}机制相对于传统启发式方法的优越性。
+在案例 XZ 中，初始网格分解产生了超过 200 个原子块，导致有效合并对的组合搜索空间呈阶乘级增长。传统的进化算法（如遗传算法）在如此高维的空间中，由于变异算子的随机性，往往面临过早收敛或生成大量无效几何形状的问题。
+
+相比之下，我们的 DQN 智能体利用空间邻接掩码（Spatial Adjacency Mask），有效地修剪了无效的动作空间（通过 $R_{validity}$ 惩罚），迫使探索过程仅关注几何上可行的区域。收敛轨迹表明，智能体迅速学会了拒绝随机合并，并采用了一种结构化的策略，优先形成大型、规则的矩形，即使在高度非凸的边界条件下也能实现较高的模块复用率。
+
+\subsection{局限性与未来工作}
+\label{subsec:limitations}
+
+虽然本框架为智能模块化设计建立了稳固的基准，但仍有几个局限性值得进一步研究：
+\begin{enumerate}
+    \item \textbf{几何离散化约束：} 当前方法依赖于正交网格分解（OGD），这限制了其仅适用于直角多边形轮廓。处理曲线或非正交的建筑边界将需要在未来的迭代中引入基于网格（Mesh）或连续状态的表示方法。
+    \item \textbf{结构物理集成：} 目前的可行性检查主要基于几何规则。未来的工作应将简化的有限元分析（FEA）集成到奖励反馈循环中，以便在合并过程中显式地优化承载能力和质心对齐。
+    \item \textbf{交互式人机协作：} 尽管加权奖励函数允许进行偏好调整，但在实际应用中需要一个更具交互性的界面，允许建筑师在推理阶段动态施加“硬约束”（例如固定的核心筒位置）。
+\end{enumerate}
+
+\section{本章小结}
+\label{sec:chapter_summary}
+
+本章提出了一种针对模块化建筑平面布局设计的智能优化框架，创新性地将正交网格分解（OGD）与空间邻接感知的深度Q网络（Deep Q-Network）相结合。通过将模块划分与合并过程公式化为一个序列决策问题，我们解决了在高维设计空间中平衡空间利用率、几何规则性和制造标准化这一难题。
+
+综合实验验证得出了以下关键结论：
+\begin{enumerate}
+    \item \textbf{优化有效性：} 该框架在性能上始终匹配或优于专家级的人工划分。在复杂场景（如案例 ZH）中，它通过将模块类型减少约 21\% 同时保持模块数量稳定，实现了显著的优化，成功突破了限制人类设计师的局部最优解。
+    \item \textbf{标准化能力：} 通过多目标奖励机制，智能体展现了强大的面向 DfMA 的优化能力。它能够自主发现最大化模块复用率的布局策略，这对模块化建筑的经济可行性至关重要。
+    \item \textbf{复杂拓扑下的鲁棒性：} 空间邻接感知策略确保了即使在具有高度不规则边界的大规模布局（如案例 XZ）中，也能实现 100\% 的几何有效性，克服了传统随机优化方法中常见的无效解问题。
+\end{enumerate}
+
+综上所述，本研究表明，当深度强化学习被赋予领域特定的空间感知能力时，能够为计算机辅助建筑设计提供一种强大且可扩展的新范式。未来的研究将集中于将此框架扩展到三维体积组装，并集成多物理场模拟，以进一步弥合概念设计与工程实现之间的鸿沟。
 
 
 
