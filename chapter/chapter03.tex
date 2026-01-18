@@ -52,7 +52,7 @@
 	算法（如遗传算法、模拟退火）在处理规则矩形轮廓时表现尚可，但
 	在面对现实中常见的非凸、不规则建筑边界时，往往难以在“模块标准
 	化”（减少模块类型以降低成本）和“轮廓匹配度”（提高覆盖率）之间
-	找到最佳平衡点，容易陷入局部最优解 \citep{Li2020_opt}。
+	找到最佳平衡点，容易陷入局部最优解。
     
     \item \textbf{计算效率瓶颈：} 许多基于搜索的生成方法随着平面复
 	杂度的增加，计算时间呈指数级增长，难以满足早期设计阶段快速迭代、
@@ -150,6 +150,30 @@ ement Learning, DRL）的端到端模块化布局生成框架。该框架不依�
 例如，$\mathcal{S}$ 可能包含 $\{3m \times 6m, 3m \times 9m, \dots\}$ 等标准规格
 。违反此约束将导致定制成本激增，丧失模块化的经济性。
 
+模块化建筑布局优化面临着若干相互关联的挑战，需要细致的解决方案。首要挑战在于捕捉和利
+用模块之间复杂的空间邻接关系——传统优化方法往往过度简化这些关系，阻碍了真正高效布局
+的生成。此外，优化过程需要平衡模块整合、空间效率、几何规则性和制造约束等内在冲突的目
+标，这对多目标处理能力提出了极高要求。
+
+由于模块化布局设计固有的解空间呈指数级增长，使得穷举搜索变得不可行，因此必须采用高效的
+探索策略。这种复杂性与经典的理论发现相一致，即“将带孔的直线多边形划分为最少数量的矩
+形”属于 **NP-难（NP-hard）问题** \citep{1979Computers}。最后，优化后的布局必须严格遵
+守实际的制造和运输限制（如最大模数尺寸和完美矩形要求），这进一步增加了优化的难度。
+
+现有的模块化布局优化方法主要依赖于传统优化算法，在应对上述复杂挑战时表现出明显的
+局限性。遗传算法（GAs）和其他进化方法虽然具备全局搜索能力，但往往难以有效地捕捉
+和利用建筑模块之间细微的空间邻接关系。这些传统方法通常将优化问题视为静态的数学公
+式，缺乏处理空间设计问题动态性和情境依赖性所需的自适应决策能力。
+
+为了解决这些局限性，本研究采用了一种纯粹的强化学习方法，利用深度 Q 网络（DQN）来实
+现高效的模块化建筑布局优化。该方法通过以下四个关键创新得以实现：
+\begin{enumerate}
+    \item 建立了专门的空间邻接感知机制，确保合并决策在几何上可行且结构上合理；
+    \item 设计了复杂的状态表示，全面捕捉布局特征，包括空间关系和形状复杂度指标；
+    \item 构建了多目标奖励机制，在平衡相互冲突的目标的同时确保满足实际约束；
+    \item 实施了严格的可行性验证流程，保证所有生成的布局均满足制造要求。
+\end{enumerate}
+
 \subsection{优化目标函数}
 
 在满足上述硬性约束的前提下，我们旨在寻找一个“最优”的布局方案。这种最优性由以
@@ -185,11 +209,27 @@ ement Learning, DRL）的端到端模块化布局生成框架。该框架不依�
 \section{基于正交网格分解的初始化策略}
 \label{sec:initialization}
 
-为了将连续的建筑平面转化为计算机可处理的离散形式，并为后续的强化学习算法提供合法的状态空间，本研究提出了一种基于正交网格分解（Orthogonal Grid Decomposition, OGD）的初始化策略。该策略旨在将任意形状的建筑轮廓离散化为一系列基础的“原子单元”，作为模块化组装的最小颗粒度。
+为了将连续的建筑平面转化为计算机可处理的离散形式，并为后续的强化学习算法提供合法的状态空
+间，本研究提出了一种基于正交网格分解（Orthogonal Grid Decomposition, OGD）的初始化策略
+。为了将不规则的平面图转化为可管理的单元，我们采用了 Lin 等人 \citep{lin2025modulepacking} 提出
+的两阶段划分策略（包含铡刀式划分和堆叠划分）。在本框架中，我们将这两个步骤
+分别定义为正交网格分解（OGD）和模块尺寸归一化（MSN）。该策略旨在将任意形状
+的建筑轮廓离散化为一系列基础的“原子单元”，作为模块化组装的最小颗粒度。
 
 \subsection{轮廓离散化处理}
 
-建筑平面轮廓 $\mathcal{P}$ 通常由一系列连续的二维坐标点定义。直接在连续空间中进行模块排布不仅计算复杂度极高，而且难以保证模块间的无缝拼接。因此，首先需要对设计空间进行离散化处理。
+建筑平面轮廓 $\mathcal{P}$ 通常由一系列连续的二维坐标点定义。直接在连续空间中进行模块排布不仅计算复杂
+度极高，而且难以保证模块间的无缝拼接。因此，首先需要对设计空间进行离散化处理。
+
+初始阶段实施正交网格分解（OGD）方法，系统地将输入的正交多边形分解为一组完整的、
+互不重叠的矩形子区域，为后续的模块化奠定基础。该过程包含以下步骤：
+\begin{itemize}
+    \item \textbf{边界特征提取：} 从多边形边界中提取所有不同的垂直和水平边缘坐标，形成潜在的网格结构。
+    \item \textbf{网格线生成：} 基于提取的坐标生成全跨度的网格线——包括从上到下的垂直线和从左到右的水平线，覆盖整个多边形。
+    \item \textbf{区域分割：} 首先应用所有垂直网格线创建垂直切片，随后利用水平网格线将这些切片进一步细分为矩形区域。
+    \item \textbf{几何验证：} 确保每个生成的子区域都是具有正面积的有效矩形，消除分解过程中可能产生的任何退化形状或数值伪影。
+\end{itemize}
+这种分解方法保证了非重叠矩形对设计空间的完全覆盖，为后续的模块化优化过程提供了一组灵活的基元。
 
 我们将建筑平面的包围盒（Bounding Box）划分为尺寸为 $\delta \times \delta$ 的正交网格系统。网格尺寸 $\delta$ 的设定至关重要，它通常取所有标准化模块尺寸的最大公约数（Greatest Common Divisor, GCD），以确保任何标准模块都可以由整数个网格单元组合而成。例如，若标准模块尺寸集合为 $\{3m \times 6m, 3m \times 9m\}$，则 $\delta$ 可设为 $3m$。
 
@@ -223,7 +263,7 @@ ement Learning, DRL）的端到端模块化布局生成框架。该框架不依�
 % 请确认您 tex 文件中 Figure 2 的实际文件名，此处暂用 figs/grid_decomposition.pdf
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=1\textwidth]{Fig2/figure1.png}
+    \includegraphics[width=1\textwidth]{Fig2/figure2.png}
     \caption{正交网格分解（OGD）过程示意图：(a) 原始建筑平面轮廓；(b) 网格离散化处理；(c) 生成的初始原子网格集合。该过程将连续的几何约束转化为离散的矩阵表示。}
     \label{fig:grid_decomposition}
 \end{figure}
@@ -235,12 +275,12 @@ ement Learning, DRL）的端到端模块化布局生成框架。该框架不依�
 决这一问题，本研究在 OGD 之后引入了模块尺寸归一化（MSN）过程。
 
 MSN 采用递归分割策略对尺寸超限的模块进行处理：
+MSN 过程首先进行约束评估，将每个矩形与预定义的制造尺寸限制 $(W_{limit}, H_{limit})$ 进行比对。对于超出约束的矩形，执行双轴拆分评估：
 \begin{itemize}
-    \item \textbf{宽度约束处理：} 对于宽度超过 $W_{max}$ 的矩形，执行水平分割
-    ，将其划分为若干宽度均匀的子段。
-    \item \textbf{高度约束处理：} 对于高度超过 $H_{max}$ 的矩形，执行垂直分割，
-    将其划分为若干高度均匀的子段。
+    \item 对于宽度超限的矩形，采用水平细分策略，确定均匀宽度的最佳段数，并生成相应的垂直分割线；
+    \item 对于高度超限的矩形，通过计算可行的均匀高度段，创建水平分割线来解决。
 \end{itemize}
+拆分方向的选择基于最大化所得模块的粒度，以增强后续合并操作的灵活性。对于任何剩余的超大模块，将递归地应用此迭代细化过程。
 
 经过 MSN 处理后，输出的模块集合 $\mathcal{M} = \{m_1, m_2, \dots, m_k\}$ 既保证
 了对原始轮廓的几何覆盖，又严格符合预设的制造与运输尺寸限制，为后续的强化学习优化
@@ -346,7 +386,9 @@ R = & \ w_{count} \cdot R_{count} + w_{type} \cdot R_{type} + w_{util} \cdot R_{
 \subsection{神经网络架构}
 \label{subsec:network_arch}
 
-鉴于状态空间已被精简为特征向量，本研究采用了高效的前馈神经网络（Feedforward Neural Network, FNN）作为 DQN 的函数近似器，而非复杂的卷积网络。
+鉴于状态空间已被精简为特征向量，本研究采用了高效的前馈
+神经网络（Feedforward Neural Network, FNN）作为 DQN 的函数近
+似器，而非复杂的卷积网络。
 
 如图 \ref{fig:dqn_architecture} 所示，网络架构具体配置如下：
 \begin{itemize}
@@ -356,6 +398,18 @@ R = & \ w_{count} \cdot R_{count} + w_{type} \cdot R_{type} + w_{util} \cdot R_{
 \end{itemize}
 
 该轻量级架构使得智能体能够在毫秒级内完成推理，满足了布局优化对实时性的要求。
+为了在受限的几何环境中实现该架构，推理机制扩展了标准的 DQN 前向传播。
+图 \ref{fig:decision_process} 展示了智能体的单步决策过程。与通用的 RL 实现不
+同，本框架在动作选择阶段显式注入了空间邻接掩码（Spatial Adjacency Mask）。如图所
+示，神经网络生成的原始 Q 值会经过邻接掩码的调制，过滤掉几何上无效的动作（例如合并非相邻模块）。这确保
+了贪婪策略仅在有效动作子空间内运行。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=1\textwidth, keepaspectratio]{Fig2/figure_new.png} 
+\caption{DQN 智能体的单步决策过程示意图。}
+\label{fig:decision_process}
+\end{figure}
 
 \subsubsection{训练策略}
 为了提高训练的稳定性和收敛速度，本研究采用了以下策略：
@@ -378,63 +432,34 @@ R = & \ w_{count} \cdot R_{count} + w_{type} \cdot R_{type} + w_{util} \cdot R_{
 % 请将此处的文件名替换为您 tex 文件中 Figure 5 对应的实际文件名
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=1\textwidth]{Fig2/figure6.png}
+    \includegraphics[width=1\textwidth]{Fig2/figure1.png}
     \caption{深度Q网络（DQN）架构示意图。网络接收网格状态输入，通过深度神经网络拟合动作价值函数，输出各潜在合并动作的Q值。}
     \label{fig:network_arch}
 \end{figure}
 
+\subsection{空间邻接感知合并策略}
+\label{subsec:merging_strategy}
 
-\section{实验结果与分析}
-\label{sec:experiments}
+空间邻接感知合并策略是本框架的核心创新，旨在实现智能模块整合的同时，严格保留几何规则性和制造约束。该过程包含三个关键阶段：
 
-为了验证所提出的空间邻接感知模块化方法的有效性，我们进行了一系列广泛的实验。本节首先介绍数据集的构建过程和实验设置，随后定义用于量化评估布局质量的评价指标，最后展示定量对比结果与定性可视化分析。
+\subsubsection{多模块组检测}
+首先，通过空间邻近性分析识别潜在的合并候选对象。我们基于 Shapely 库的 \texttt{unary\_union} 操作，将每个模块的包围盒转换为多边形几何对象，并计算缓冲区（通常为 1 个单位）以处理相邻关系。该方法能够有效处理直接相邻和近邻情况，确保不遗漏任何潜在的合并机会，其时间复杂度为 $\mathcal{O}(n \log n)$。
 
-\subsection{实验设置与数据集}
-\label{subsec:dataset}
-
-为了系统地验证所提出强化学习框架的有效性与鲁棒性，本研究建立了一个
-包含不同几何复杂度的综合数据集（Dataset）。依据英文原文描述，该数据集
-具体由以下两组场景构成：
-
+\subsubsection{可行性检查}
+检测到的每个候选组都必须通过严格的多层可行性验证：
 \begin{enumerate}
-    \item \textbf{标准模块化场景 (Standard Modular Scenarios)：} 包含源自真
-    实住宅项目的典型建筑平面（案例 JF, LM, ZH），主要用于验证算法在常规布局标
-    准化方面的能力。
-    \item \textbf{大规模复杂场景 (Large-Scale Complex Scenarios)：} 包含具有
-    大尺度边界和高维搜索空间的复杂平面（案例 GF, XZ, HY），旨在测试算法在
-    处理复杂空间约束时的可扩展性与稳定性。
+    \item \textbf{尺寸约束：} 合并后的包围盒必须满足 $W \le W_{max}$ 和 $H \le H_{max}$。
+    \item \textbf{完美矩形验证：} 确保合并后的几何形状内部无孔洞、无凹陷，且所有边缘正交。
+    \item \textbf{面积守恒：} 验证子模块面积之和等于父模块面积（容差 0.01），以防止浮点数精度误差。
 \end{enumerate}
 
-所有实验均在配置 Intel Core i5-13400F CPU 和 NVIDIA RTX 4070 GPU 的工作站上进行。
-算法基于 Python 和 PyTorch 库实现。DQN 智能体的超参数（如 $\epsilon$-greedy 策
-略的衰减因子 0.95）均经过经验微调以平衡探索与利用。
-
-\subsection{评价指标}
-\label{subsec:metrics}
-
-为了全面评估生成布局的质量，本研究定义了三个核心评价指标，分别对应覆盖率、标准化程度和计算效率。
-
-\subsubsection{覆盖率 (Coverage Rate, CR)}
-覆盖率衡量了生成的模块化布局对原始建筑轮廓的填充程度，是评估空间利用率的关键指标。其计算公式为：
-\begin{equation}
-    \text{CR} = \frac{\sum_{m \in \mathcal{M}} \text{Area}(m)}{\text{Area}(\mathcal{P})} \times 100\%
-\end{equation}
-其中，$\mathcal{M}$ 是生成的模块集合，$\mathcal{P}$ 是原始建筑轮廓。$\text{CR}$ 值越高，表示死角空间越少，得房率越高。
-
-\subsubsection{模块标准化率 (Standardization Ratio, SR)}
-标准化率用于评估布局中模块规格的统一程度，直接关联制造成本。我们将其定义为主要模块类型（出现频率最高的 Top-K 种模块）所占面积的比例：
-\begin{equation}
-    \text{SR} = \frac{\sum_{m \in \mathcal{M}_{\text{std}}} \text{Area}(m)}{\sum_{m \in \mathcal{M}} \text{Area}(m)} \times 100\%
-\end{equation}
-其中，$\mathcal{M}_{\text{std}}$ 表示属于标准尺寸集合的模块子集。$\text{SR}$ 值越高，意味着生产线的模具复用率越高，经济性越好。
-
-\subsubsection{邻接一致性 (Adjacency Consistency, AC)}
-为了量化算法对空间拓扑关系的保持能力，我们提出了邻接一致性指标。该指标计算生成布局的邻接图与原始空间邻接图之间的相似度：
-\begin{equation}
-    \text{AC} = \frac{|E_{\text{gen}} \cap E_{\text{orig}}|}{|E_{\text{orig}}|}
-\end{equation}
-其中，$E_{\text{gen}}$ 和 $E_{\text{orig}}$ 分别表示生成布局和原始空间划分中的邻接边集合。$\text{AC}$ 值越高，说明房间之间的功能联系被保留得越完整。
-
+\subsubsection{修复机制}
+当合并操作未通过可行性检查时，框架将激活修复机制：
+\begin{itemize}
+    \item \textbf{渐进式分割：} 递归地将候选组分割为更小的子组，直到找到合法的子合并。
+    \item \textbf{块重新分配：} 基于欧几里得距离和连通性分析，将无效块重新分配给最近的合法模块。
+    \item \textbf{新模块生成：} 当无法重新分配时，基于剩余几何形状动态生成符合尺寸要求的新模块。
+\end{itemize}
 
 
 \section{实验结果与分析}
@@ -448,18 +473,23 @@ R = & \ w_{count} \cdot R_{count} + w_{type} \cdot R_{type} + w_{util} \cdot R_{
 由于缺乏公开的模块化建筑平面布局数据集，本研究构建了一个包含多样化建筑轮廓的合成数据集。为了模拟现实世界中复杂多变的用地条件，我们采用随机生成算法创建了训练样本。
 
 \subsubsection{数据生成}
-数据集包含不同几何特征的建筑轮廓，涵盖了从简单的凸多边形（如矩形、L形）到复杂的凹多边形。每个轮廓被离散化为正交网格，作为智能体的初始环境。我们共生成了 \textbf{[请填入具体数量]} 个样本，并按照 \textbf{[请填入比例]} 的比例将其划分为训练集和测试集。
+为了系统地验证所提出强化学习框架的有效性与鲁棒性，本研究建立了一个包含不同几何复杂度的综合数据集。该数据集具体由以下两组场景构成：
+
+\begin{enumerate}
+    \item \textbf{标准模块化场景 (Standard Modular Scenarios)：} 包含源自真实住宅项目的典型建筑平面（案例 JF, LM, ZH），主要用于验证算法在常规布局标准化方面的能力。
+    \item \textbf{大规模复杂场景 (Large-Scale Complex Scenarios)：} 包含具有大尺度边界和高维搜索空间的复杂平面（案例 GF, XZ, HY），旨在测试算法在处理复杂空间约束时的可扩展性与稳定性。
+\end{enumerate}
+
+所有实验均在配置 Intel Core i5-13400F CPU 和 NVIDIA RTX 4070 GPU 的工作站上进行。算法
+基于 Python 和 PyTorch 库实现。
 
 \subsubsection{参数设置}
-实验基于深度强化学习框架进行。在DQN训练过程中，超参数设置如下：经验回放池（Replay Buffer）大小设定为 \textbf{[数值]}，折扣因子 $\gamma$ 设为 \textbf{[数值]}，学习率设为 \textbf{[数值]}。为了平衡探索与利用，采用 $\epsilon$-贪婪策略，$\epsilon$ 值随训练步数从 \textbf{[初始值]} 线性衰减至 \textbf{[最终值]}。
+实验基于深度强化学习框架进行。在DQN训练过程中，超参数设置如下：经验回放池（Replay Buffer）大
+小设定为 10,000，折扣因子 $\gamma$ 设为 0.99，学习率设为 0.001。为了平衡探索与利用，采
+用 $\epsilon$-贪婪策略，$\epsilon$ 值随训练步数从 1.0 线性衰减至 0.1。此外，设置了严厉的无效
+惩罚 ($R_{validity}=-50.0$) 以确保几何可行性。
 
-% 请替换为您 tex 文件中对应“数据集”或“训练曲线”的图片文件名
-\begin{figure}[H]
-\centering
-\includegraphics[width=1\textwidth]{Fig2/figure8.png} 
-\caption{数据集样本示例及训练过程中的奖励收敛曲线。}
-\label{fig:dataset_training}
-\end{figure}
+
 
 \subsection{评价指标}
 \label{subsec:metrics}
@@ -475,7 +505,36 @@ R = & \ w_{count} \cdot R_{count} + w_{type} \cdot R_{type} + w_{util} \cdot R_{
 \subsection{结果分析}
 \label{subsec:results}
 
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{Fig2/figure4.png} 
+\caption{案例 JF 的建筑平面图及提取的模块化边界。}
+\label{fig:standard_case_jf}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{Fig2/figure5.png} 
+\caption{案例 LM 的建筑平面图及提取的模块化边界。}
+\label{fig:standard_case_lm}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{Fig2/figure6.png} 
+\caption{案例 ZH 的建筑平面图及提取的模块化边界。}
+\label{fig:standard_case_zh}
+\end{figure}
+
 \subsubsection{标准模块化场景性能评估}
+在评估的第一阶段，我们将框架应用于三个源自真实住宅项目的标准建筑
+平面（案例 JF、LM 和 ZH）。图 \ref{fig:standard_case_jf}、
+图 \ref{fig:standard_case_lm} 和 图 \ref{fig:standard_case_zh} 分别展示了这些
+案例的建筑语境。图中显示的原始建筑平面以及提取出的正交边界轮廓，构成了模块化过
+程的几何输入。需要说明的是，图中未着色的区域代表不可模块化的功能区（如楼梯间和管井），不包
+含在优化范围内。
+
+基于提取的边界约束，RL 智能体执行了布局优化。
 表 \ref{tab:std_performance} 展示了在三个标准案例（JF, LM, ZH）中，本方法与人工划分基准的详细对比。
 实验结果表明，智能体成功习得了符合 DfMA 原则的策略。特别是在案例 ZH 中，为了最大化标准化程度，智能体将模块类型数量 ($C_t$) 从人工方案的 19 种显著降低至 15 种（降幅 21.05\%），同时仅略微增加了 1 个模块数量。这证明了算法能够在保证覆盖率的前提下，有效权衡制造成本（模具数量）与吊装成本（模块数量）。
 
@@ -501,18 +560,20 @@ R = & \ w_{count} \cdot R_{count} + w_{type} \cdot R_{type} + w_{util} \cdot R_{
 
 \begin{table}[htbp]
     \centering
-    \caption{Comparative performance analysis between Manual Partitioning and the Proposed RL Framework across standard modular scenarios.}
-    \label{tab:performance_comparison}
+    \caption{标准模块化场景下的性能对比（人工划分 vs 本文 RL 方法）}
+    \label{tab:std_performance}
     
+    % 定义列格式：居中、定宽、垂直居中
     \begin{tabular}{ c m{0.32\linewidth}<{\centering} m{0.32\linewidth}<{\centering} m{0.22\linewidth} }
         \toprule
-        Case & Manual Partitioning & Ours (RL) & Metrics Comparison \\
+        \textbf{案例} & \textbf{人工划分} & \textbf{本文方法 (RL)} & \textbf{指标对比} \\
         \midrule
         \addlinespace[5pt] 
         
         % --- Case 1: JF ---
         JF 
         & 
+        % 请确保路径正确，例如 Fig2/figure7_1.png
         \raisebox{-0.5\height}{\includegraphics[width=0.95\linewidth, height=2.5cm, keepaspectratio]{Fig2/figure7_1.png}}%
         & 
         \raisebox{-0.5\height}{\includegraphics[width=0.95\linewidth, height=2.5cm, keepaspectratio]{Fig2/figure7_2.png}}%
@@ -537,7 +598,7 @@ R = & \ w_{count} \cdot R_{count} + w_{type} \cdot R_{type} + w_{util} \cdot R_{
         & 
         \begin{tabular}{@{}l@{}}
             $C_m$: $7 \to \mathbf{7}$ \\ 
-            \small{\textcolor[gray]{0.5}{(Equal)}} \\[0.5em]
+            \small{\textcolor[gray]{0.5}{(持平)}} \\[0.5em]
             
             $C_t$: $6 \to \mathbf{5}$ \\
             \small{\textcolor[gray]{0.5}{($\downarrow$ 16.67\%)}}
@@ -568,6 +629,26 @@ R = & \ w_{count} \cdot R_{count} + w_{type} \cdot R_{type} + w_{util} \cdot R_{
 \end{table}
 
 \subsubsection{大规模复杂场景的可扩展性}
+
+图 \ref{fig:large_scale_boundaries} 展示了这些场景的几何复杂度和
+整体尺寸。图 \ref{fig:large_scale_final} 可视化了优化后的结果。尽管边界条件极
+其复杂，智能体仍成功为所有三个案例生成了有效的布局配置。
+% 对应英文版 Fig 8
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{Fig2/figure8.png} 
+\caption{三个大规模复杂场景（GF, XZ, HY）的边界轮廓与尺寸定义。}
+\label{fig:large_scale_boundaries}
+\end{figure}
+
+% 对应英文版 Fig 9 (中文版原文件缺失)
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{Fig2/figure9.png} 
+\caption{大规模场景下的模块化布局优化结果。不同颜色代表不同类型的模块。}
+\label{fig:large_scale_final}
+\end{figure}
+
 对于具有高度非凸边界的大规模场景，表 \ref{tab:large_scale_results} 统计了生成布局的模块指标。以最复杂的 Case XZ 为例，在初始包含超过 200 个原子网格的巨大搜索空间中，算法成功将最终模块数量控制在 151 个，并保持模块类型仅为 19 种。在 Case HY 中，算法实现了极高的模块复用率，仅用 6 种模块类型即覆盖了 68 个模块区域（平均每种模具复用约 11.3 次）。
 
 \begin{table}[htbp]
@@ -583,6 +664,25 @@ R = & \ w_{count} \cdot R_{count} + w_{type} \cdot R_{type} + w_{util} \cdot R_{
 \bottomrule
 \end{tabular}
 \end{table}
+
+\subsubsection{算法特性与收敛性分析}
+为了进一步探究智能体的学习动态，验证结果并非源于随机搜索，我们分析了大规模案例 XZ 优化过程中的训练日志。图 \ref{fig:convergence_curves} 展示了 100 个训练回合中，总奖励、模块数量 ($C_m$) 和模块类型多样性 ($C_t$) 的收敛曲线。
+
+% 在这里插入刚才剪切的 figure10 代码
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{Fig2/figure10.png} 
+\caption{训练特征曲线。双轴图展示了模块数量 ($C_m$)、模块类型 ($C_t$) 以及累积奖励的优化轨迹。}
+\label{fig:convergence_curves}
+\end{figure}
+
+收敛趋势揭示了三个明显的学习阶段：
+\begin{enumerate}
+    \item \textbf{探索阶段 (Episodes 0-30)：} 由于智能体积极探索动作空间（高 $\epsilon$ 值），奖励波动较大。
+    \item \textbf{策略形成阶段 (Episodes 30-70)：} 观察到模块数量和类型多样性迅速下降。这表明智能体正在学习有效的空间模式，例如识别出将特定相邻块合并为更大矩形可以持续获得更高奖励。
+    \item \textbf{稳定阶段 (Episodes 70-100)：} 指标趋于稳定，表明策略已收敛至近似最优解。
+\end{enumerate}
+这一轨迹证实了所提出的空间邻接感知机制有效地修剪了无效动作空间，使智能体能够将计算资源集中在物理上可行的高回报动作上。
 
 \section{讨论}
 \label{sec:discussion}
